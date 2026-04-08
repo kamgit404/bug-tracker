@@ -11,7 +11,17 @@ pipeline {
             }
             steps {
                dir('bugtracker-backend'){
-                    sh 'go test -v ./...'
+                sh '''
+                    # Set Go cache to a writable location
+                    export GOCACHE="$PWD/.cache/go-build"
+                    export GOMODCACHE="$PWD/.cache/go-mod"
+
+                    # Create cache directories
+                    mkdir -p "$GOCACHE" "$GOMODCACHE"
+
+                    # Run tests
+                    'go test -v ./...'
+                '''
                }
             }
         }
