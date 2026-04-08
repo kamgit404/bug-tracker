@@ -20,7 +20,7 @@ pipeline {
                     mkdir -p "$GOCACHE" "$GOMODCACHE"
 
                     # Run tests
-                    'go test -v ./...'
+                    go test -v ./...
                 '''
                }
             }
