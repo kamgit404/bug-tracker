@@ -2,9 +2,8 @@ FROM golang:1.21-alpine
 
 WORKDIR /app
 
-# Create mount point directory & cache with proper permissions
+# Create mount point directory with proper permissions
 RUN mkdir -p /data && chmod 777 /data
-RUN mkdir -p /.cache && chmod 777 /.cache
 
 # Install wget for healthcheck
 RUN apk add --no-cache wget
