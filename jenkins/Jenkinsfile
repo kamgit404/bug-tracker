@@ -59,12 +59,21 @@ pipeline {
 
                     # Run tests
                     npm test
+
+                    # Create directory for coverage report and move it there
+                    mkdir -p reports
+                    mv coverage reports/
                 '''
                }
             }
             post {
                 always {
                     junit 'bugtracker-frontend/test-results.xml'
+                    publishHTML target: [
+                        reportName: 'Frontend Coverage Report',
+                        reportDir: 'bugtracker-frontend/reports/coverage',
+                        reportFiles: 'index.html',
+                    ]
                 }
             }
         }
