@@ -81,6 +81,20 @@ pipeline {
                 }
             }
         }
+
+        stage ('Launch Application') {
+            agent {
+                docker {
+                    image 'docker:27.5.1'
+                    reuseNode true
+                    args '-v /var/run/docker.sock:/var/run/docker.sock -u 0'
+                }
+            }
+            steps {
+                //Build and run the application
+                sh 'docker compose up -d --build'
+            }
+        }
     }
     post {
         always {
