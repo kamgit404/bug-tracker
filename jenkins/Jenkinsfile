@@ -126,7 +126,7 @@ pipeline {
                             ]
                         }
                     }
-                },
+                }
                 stage('E2E Tests') {
                     steps {
                         dir('bugtracker/tests-e2e') {
