@@ -9,7 +9,7 @@ services:
       - jenkins-docker-certs:/certs/client
       - jenkins-data:/var/jenkins_home
     ports:
-      - "2376:2376"
+      - '2376:2376'
     networks:
       jenkins:
         aliases:
@@ -29,8 +29,8 @@ services:
       - jenkins-data:/var/jenkins_home
       - jenkins-docker-certs:/certs/client:ro
     ports:
-      - "9000:8080"
-      - "50000:50000"
+      - '9000:8080'
+      - '50000:50000'
     networks:
       - jenkins
 

@@ -1,29 +1,29 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from '@playwright/test';
 
 let testBugId: number;
 
-test("Call Health Check", async ({ request }) => {
-  console.log("Starting test...");
+test('Call Health Check', async ({ request }) => {
+  console.log('Starting test...');
 
-  const healthCheckResponse = await request.get("health");
+  const healthCheckResponse = await request.get('health');
   expect(healthCheckResponse.ok()).toBeTruthy();
   expect(await healthCheckResponse.json()).toEqual(
     expect.objectContaining({
-      status: "ok",
+      status: 'ok',
     })
   );
 });
 
-test("Create a bug", async ({ request }) => {
+test('Create a bug', async ({ request }) => {
   const timestamp = Date.now();
   const newBug = {
     title: `Test Bug ${timestamp}`,
-    description: "This is a test bug created by Playwright",
-    status: "Open",
-    priority: "Medium",
+    description: 'This is a test bug created by Playwright',
+    status: 'Open',
+    priority: 'Medium',
   };
 
-  const response = await request.post("bugs", {
+  const response = await request.post('bugs', {
     data: newBug,
   });
 
@@ -43,13 +43,13 @@ test("Create a bug", async ({ request }) => {
   });
 });
 
-test("Update a bug", async ({ request }) => {
+test('Update a bug', async ({ request }) => {
   const timestamp = Date.now();
   const updatedBug = {
     title: `Updated Bug ${timestamp}`,
-    description: "This bug was updated by Playwright",
-    status: "In Progress",
-    priority: "High",
+    description: 'This bug was updated by Playwright',
+    status: 'In Progress',
+    priority: 'High',
   };
 
   const response = await request.put(`bugs/${testBugId}`, {
@@ -70,7 +70,7 @@ test("Update a bug", async ({ request }) => {
   });
 });
 
-test("Get a specific bug", async ({ request }) => {
+test('Get a specific bug', async ({ request }) => {
   const response = await request.get(`bugs/${testBugId}`);
 
   expect(response.ok()).toBeTruthy();
@@ -79,16 +79,16 @@ test("Get a specific bug", async ({ request }) => {
   expect(bug.id).toBe(testBugId);
   expect(bug).toMatchObject({
     id: testBugId,
-    title: expect.stringContaining("Updated Bug"),
-    description: "This bug was updated by Playwright",
-    status: "In Progress",
-    priority: "High",
+    title: expect.stringContaining('Updated Bug'),
+    description: 'This bug was updated by Playwright',
+    status: 'In Progress',
+    priority: 'High',
     created_at: expect.any(String),
     updated_at: expect.any(String),
   });
 });
 
-test("Delete a bug", async ({ request }) => {
+test('Delete a bug', async ({ request }) => {
   const deleteResponse = await request.delete(`bugs/${testBugId}`);
   expect(deleteResponse.ok()).toBeTruthy();
 
