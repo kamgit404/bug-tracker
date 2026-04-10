@@ -1,0 +1,16 @@
+node_modules
+dist
+build
+coverage
+playwright-report
+test-results
+bugtracker-frontend
+bugtracker-backend
+.git
+.husky
+
+*.log
+*.lock
+*.md
+*.env
+Jenkinsfile

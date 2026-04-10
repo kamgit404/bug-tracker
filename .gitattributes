@@ -1,0 +1,24 @@
+# Default to LF in repo
+* text=auto eol=lf
+
+# Docker / CI files MUST stay LF
+*.yml eol=lf
+*.yaml eol=lf
+Dockerfile eol=lf
+docker-compose.yml eol=lf
+Jenkinsfile eol=lf
+
+# Code configs
+*.json eol=lf
+*.ts eol=lf
+*.js eol=lf
+
+# Tooling configs
+.eslintrc eol=lf
+.prettierrc eol=lf
+.prettierignore eol=lf
+.gitattributes eol=lf
+
+# Windows scripts
+*.bat eol=crlf
+*.cmd eol=crlf
