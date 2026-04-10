@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     stages {
-        stage ('Execute Unit Tests') {
+        stage ('Unit Tests') {
             parallel {
                 stage('Unit Tests - Backend') {
                     agent {
@@ -93,6 +93,56 @@ pipeline {
             steps {
                 //Build and run the application
                 sh 'docker compose up -d --build'
+            }
+        }
+
+        stage ('Playwright Tests'){
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
+                    reuseNode true
+                    args '-u 0 --network=host'
+                }
+            }
+            stage('Setup'){
+                steps {
+                    // Wait for docker to be ready
+                    sh 'npx wait-port http://localhost:8080/api/health -t 30000'
+                }
+            }
+            parallel {
+                stage('API Tests') {
+                    steps {
+                        dir('bugtracker/tests-api') {
+                            sh 'npm ci && npx playwright test --reporter=html'
+                        }
+                    }
+                    post {
+                        always {
+                            publishHTML target: [
+                                reportName: 'API Test Results',
+                                reportDir: 'bugtracker/tests-api/playwright-report',
+                                reportFiles: 'index.html',
+                            ]
+                        }
+                    }
+                },
+                stage('E2E Tests') {
+                    steps {
+                        dir('bugtracker/tests-e2e') {
+                            sh 'npm ci && npx playwright test --reporter=html'
+                        }
+                    }
+                    post {
+                        always {
+                            publishHTML target: [
+                                reportName: 'E2E Test Results',
+                                reportDir: 'bugtracker/tests-e2e/playwright-report',
+                                reportFiles: 'index.html',
+                            ]
+                        }
+                    }
+                }
             }
         }
     }
