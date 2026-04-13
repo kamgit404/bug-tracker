@@ -9,7 +9,7 @@ jobs:
     unit-tests-backend:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4 # Check out the repository
+            - uses: actions/checkout@v5 # Check out the repository
 
             - name: Set up Go
               uses: actions/setup-go@v4 # Github special actions to help install Go onto Github runner instance
@@ -37,10 +37,10 @@ jobs:
         needs: unit-tests-backend
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
 
             - name: Set up Node.js
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v5
               with:
                 node-version: '24' 
                 cache: 'npm'
@@ -57,7 +57,7 @@ jobs:
 #   playwright-api-tests:
 #        runs-on: ubuntu-latest
 #        steps:
-#            - uses: actions/checkout@v4
+#            - uses: actions/checkout@v5
 
 #            - name: Run Playwright API Tests
 #              working-directory: ./tests-api
@@ -65,7 +65,7 @@ jobs:
 #    playwright-e2e-tests:
 #        runs-on: ubuntu-latest
 #        steps:
-#            - uses: actions/checkout@v4
+#            - uses: actions/checkout@v5
 #
 #            - name: Run Playwright E2E Tests
 #              working-directory: ./tests-e2e
@@ -73,7 +73,7 @@ jobs:
 #    k6-perf-tests:
 #        runs-on: ubuntu-latest
 #        steps:
-#            - uses: actions/checkout@v4
+#            - uses: actions/checkout@v5
 #
 #            - name: Run k6 Performance tests
 #              working-directory: ./tests-perf
