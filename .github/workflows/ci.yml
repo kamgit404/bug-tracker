@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+    unit-tests-backend:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4 # Check out the repository
+
+            - name: Set up Go
+              uses: actions/setup-go@v4 # Github special actions to help install Go onto Github runner instance
+              with:
+                go-version: '1.21' # Specify the Go version
+                cache-dependency-path: ./bugtracker-backend/go.sum # Cache the files so that it is reused in subsequent runs
+
+            - name: Run Backend Unit Tests
+              working-directory: ./bugtracker-backend
+              run: |
+                # Set Go cache to a writable location
+                # export GOCACHE="$PWD/.cache/go-build"
+                # export GOMODCACHE="$PWD/.cache/go-mod"
+
+                # Create cache directories
+                # mkdir -p "$GOCACHE" "$GOMODCACHE"
+
+                # Run tests and produce test result report
+                go test -v ./... 
+                # 2>&1 | go-junit-report > test-results.xml
+
+                # Generate coverage report
+                # go test -coverprofile=coverage.out -covermode=atomic ./...
+                # go tool cover -html=coverage.out -o coverage.html
+
+                # Create reports directory and move coverage report here
+                # mkdir -p reports
+                # mv coverage.html reports/
+
+#   unit-tests-frontend:
+#        runs-on: ubuntu-latest
+#        steps:
+#            - uses: actions/checkout@v4
+#
+#            - name: Set up Go
+#              uses: actions/setup-go@v4 # Github special actions to help install Go onto Github runner instance
+#              with:
+#                go-version: '1.21' # Specify the Go version
+#                cache-dependency-path: ./bugtracker-backend/go.sum # Cache the files so that it is reused in subsequent runs
+#
+#            - name: Run Frontend Unit Tests
+#              working-directory: ./bugtracker-frontend
+#              run: |
+#                npm ci
+#                npm test
+#                mkdir -p reports
+#                mv coverage reports/
+#
+#   playwright-api-tests:
+#        runs-on: ubuntu-latest
+#        steps:
+#            - uses: actions/checkout@v4
+
+#            - name: Run Playwright API Tests
+#              working-directory: ./tests-api
+#              run: npm ci && npx playwright test
+#    playwright-e2e-tests:
+#        runs-on: ubuntu-latest
+#        steps:
+#            - uses: actions/checkout@v4
+#
+#            - name: Run Playwright E2E Tests
+#              working-directory: ./tests-e2e
+#              run: npm ci && npx playwright test
+#    k6-perf-tests:
+#        runs-on: ubuntu-latest
+#        steps:
+#            - uses: actions/checkout@v4
+#
+#            - name: Run k6 Performance tests
+#              working-directory: ./tests-perf
+#              run: k6 run script.js
+
+
