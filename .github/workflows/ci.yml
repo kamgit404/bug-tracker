@@ -20,18 +20,18 @@ jobs:
             - name: Install go-junit-report
               run: go install github.com/jstemmer/go-junit-report/v2@latest
 
-#            - name: Backend Code Coverage Report
-#              working-directory: ./bugtracker-backend
-#              run: |
-#
-#                go test -json -coverprofile=coverage.out -covermode=atomic ./...
-#                go tool cover -func=coverage.out > coverage.txt
-#
-#                # Displays the coverage report directly on the GitHub Actions workflow page
-#                echo "## Backend Test Coverage Report" >> $GITHUB_STEP_SUMMARY
-#                echo '```' >> $GITHUB_STEP_SUMMARY
-#                cat coverage.txt >> $GITHUB_STEP_SUMMARY
-#                echo '```' >> $GITHUB_STEP_SUMMARY
+            - name: Backend Code Coverage Report
+              working-directory: ./bugtracker-backend
+              run: |
+
+                go test -json -coverprofile=coverage.out -covermode=atomic ./...
+                go tool cover -func=coverage.out > coverage.txt
+
+                # Displays the coverage report directly on the GitHub Actions workflow page
+                echo "## Backend Test Coverage Report" >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+                cat coverage.txt >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
 
             - name: Run Backend Unit Tests
               working-directory: ./bugtracker-backend
