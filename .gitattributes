@@ -6,6 +6,7 @@
 *.yaml eol=lf
 Dockerfile eol=lf
 docker-compose.yml eol=lf
+.github/workflows/*.yml text eol=lf
 Jenkinsfile eol=lf
 
 # Code configs
