@@ -64,7 +64,15 @@ jobs:
               working-directory: ./bugtracker-frontend
               run: |
                 npm ci
-                npm test
+                npm test | tee full_output.txt
+
+            - name: Frontend Code Coverage Report
+              working-directory: ./bugtracker-frontend
+              run: |
+                echo "## Frontend Test Coverage Report" >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+                cat full_output.txt >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
 
             - name: Publish Frontend Unit Tests Report
               uses: dorny/test-reporter@v1
