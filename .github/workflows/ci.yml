@@ -20,7 +20,7 @@ jobs:
             - name: Install go-junit-report
               run: go install github.com/jstemmer/go-junit-report/v2@latest
 
-            - name: Run Backend Unit Tests
+            - name: Backend Code Coverage Report
               working-directory: ./bugtracker-backend
               run: |
 
@@ -32,6 +32,10 @@ jobs:
                 echo '```' >> $GITHUB_STEP_SUMMARY
                 cat coverage.txt >> $GITHUB_STEP_SUMMARY
                 echo '```' >> $GITHUB_STEP_SUMMARY
+
+            - name: Run Backend Unit Tests
+              working-directory: ./bugtracker-backend
+              run: |
 
                 go test -v ./... 2>&1 | go-junit-report > test-results.xml
 
