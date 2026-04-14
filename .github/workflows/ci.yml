@@ -27,7 +27,7 @@ jobs:
                 go test -v ./... 2>&1 | go-junit-report > test-results.xml
 
             - name: Publish Backend Test Report
-              uses: dorny/test-reporter@v1
+              uses: dorny/test-reporter@v3
               if: always()
               with:
                 name: Backend Unit Tests Report
@@ -54,7 +54,7 @@ jobs:
                 npm test
 
             - name: Publish Frontend Unit Test Report
-              uses: dorny/test-reporter@v1
+              uses: dorny/test-reporter@v3
               if: always()
               with:
                 name: Frontend Unit Tests Report
