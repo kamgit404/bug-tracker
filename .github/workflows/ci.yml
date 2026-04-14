@@ -20,18 +20,18 @@ jobs:
             - name: Install go-junit-report
               run: go install github.com/jstemmer/go-junit-report/v2@latest
 
-            - name: Backend Code Coverage Report
-              working-directory: ./bugtracker-backend
-              run: |
-
-                go test -json -coverprofile=coverage.out -covermode=atomic ./...
-                go tool cover -func=coverage.out > coverage.txt
-
-                # Displays the coverage report directly on the GitHub Actions workflow page
-                echo "## Go Test Coverage Report" >> $GITHUB_STEP_SUMMARY
-                echo '```' >> $GITHUB_STEP_SUMMARY
-                cat coverage.txt >> $GITHUB_STEP_SUMMARY
-                echo '```' >> $GITHUB_STEP_SUMMARY
+#            - name: Backend Code Coverage Report
+#              working-directory: ./bugtracker-backend
+#              run: |
+#
+#                go test -json -coverprofile=coverage.out -covermode=atomic ./...
+#                go tool cover -func=coverage.out > coverage.txt
+#
+#                # Displays the coverage report directly on the GitHub Actions workflow page
+#                echo "## Backend Test Coverage Report" >> $GITHUB_STEP_SUMMARY
+#                echo '```' >> $GITHUB_STEP_SUMMARY
+#                cat coverage.txt >> $GITHUB_STEP_SUMMARY
+#                echo '```' >> $GITHUB_STEP_SUMMARY
 
             - name: Run Backend Unit Tests
               working-directory: ./bugtracker-backend
@@ -39,7 +39,7 @@ jobs:
 
                 go test -v ./... 2>&1 | go-junit-report > test-results.xml
 
-            - name: Publish Backend Test Report
+            - name: Publish Backend Unit Tests Report
               uses: dorny/test-reporter@v3
               if: always()
               with:
@@ -66,7 +66,7 @@ jobs:
                 npm ci
                 npm test
 
-            - name: Publish Frontend Unit Test Report
+            - name: Publish Frontend Unit Tests Report
               uses: dorny/test-reporter@v3
               if: always()
               with:
