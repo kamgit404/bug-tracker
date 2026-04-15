@@ -49,18 +49,18 @@ jobs:
 
                 go test -v ./... 2>&1 | go-junit-report > test-results.xml
 
-            - name: Publish Backend Unit Test Results
+            - name: Publish Backend Unit Tests Result
               uses: dorny/test-reporter@v1
               if: always()
               with:
-                name: Backend Unit Test Results
+                name: Backend Unit Tests Result
                 path: ./bugtracker-backend/test-results.xml
                 reporter: jest-junit
 
     unit-tests-frontend:
         runs-on: ubuntu-latest
         outputs:
-            coverage: ${{ steps.coverage-report-frontend.outputs.report }}
+            coverage: ${{ steps.run-test-frontend.outputs.report }}
         steps:
             - uses: actions/checkout@v5
 
@@ -72,13 +72,13 @@ jobs:
                 cache-dependency-path: ./bugtracker-frontend/package-lock.json
                 
             - name: Run Frontend Unit Tests
+              id: run-test-frontend
               working-directory: ./bugtracker-frontend
               run: |
                 npm ci
                 npm test | tee full_output.txt
 
             - name: Frontend Code Coverage Report
-              id: coverage-report-frontend
               working-directory: ./bugtracker-frontend
               run: |
 
@@ -92,11 +92,11 @@ jobs:
                 cat full_output.txt >> $GITHUB_OUTPUT
                 echo 'EOF' >> $GITHUB_OUTPUT
 
-            - name: Publish Frontend Unit Tests Report
+            - name: Publish Frontend Unit Tests Result
               uses: dorny/test-reporter@v1
               if: always()
               with:
-                name: Frontend Unit Tests Report
+                name: Frontend Unit Tests Result
                 path: ./bugtracker-frontend/test-results.xml
                 reporter: jest-junit
 
