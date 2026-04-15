@@ -60,7 +60,7 @@ jobs:
     unit-tests-frontend:
         runs-on: ubuntu-latest
         outputs:
-            coverage: ${{ steps.run-test-frontend.outputs.report }}
+            coverage: ${{ steps.run-tests-frontend.outputs.report }}
         steps:
             - uses: actions/checkout@v5
 
@@ -72,16 +72,13 @@ jobs:
                 cache-dependency-path: ./bugtracker-frontend/package-lock.json
                 
             - name: Run Frontend Unit Tests
-              id: run-test-frontend
+              id: run-tests-frontend
               working-directory: ./bugtracker-frontend
               run: |
+
                 npm ci
                 npm test | tee full_output.txt
-
-            - name: Frontend Code Coverage Report
-              working-directory: ./bugtracker-frontend
-              run: |
-
+                
                 echo '## 📊 Frontend Test Coverage Report' >> $GITHUB_STEP_SUMMARY
                 echo '```' >> $GITHUB_STEP_SUMMARY
                 cat full_output.txt >> $GITHUB_STEP_SUMMARY
