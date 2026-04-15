@@ -3,11 +3,15 @@ name: CI
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
     unit-tests-backend:
         runs-on: ubuntu-latest
+        outputs:
+            coverage: ${{ steps.coverage-report-backend.outputs.report }}
         steps:
             - uses: actions/checkout@v5 # Check out the repository
 
@@ -21,6 +25,7 @@ jobs:
               run: go install github.com/jstemmer/go-junit-report/v2@latest
 
             - name: Backend Code Coverage Report
+              id: coverage-report-backend
               working-directory: ./bugtracker-backend
               run: |
 
@@ -33,23 +38,29 @@ jobs:
                 cat coverage.txt >> $GITHUB_STEP_SUMMARY
                 echo '```' >> $GITHUB_STEP_SUMMARY
 
+                # Save coverage report as an output to be used to create PR comment
+                echo 'report<<EOF' >> $GITHUB_OUTPUT
+                cat coverage.txt >> $GITHUB_OUTPUT
+                echo 'EOF' >> $GITHUB_OUTPUT
+
             - name: Run Backend Unit Tests
               working-directory: ./bugtracker-backend
               run: |
 
                 go test -v ./... 2>&1 | go-junit-report > test-results.xml
 
-            - name: Publish Backend Unit Tests Report
+            - name: Publish Backend Unit Test Results
               uses: dorny/test-reporter@v1
               if: always()
               with:
-                name: Backend Unit Tests Report
+                name: Backend Unit Test Results
                 path: ./bugtracker-backend/test-results.xml
                 reporter: jest-junit
 
     unit-tests-frontend:
-        needs: unit-tests-backend
         runs-on: ubuntu-latest
+        outputs:
+            coverage: ${{ steps.coverage-report-frontend.outputs.report }}
         steps:
             - uses: actions/checkout@v5
 
@@ -67,12 +78,19 @@ jobs:
                 npm test | tee full_output.txt
 
             - name: Frontend Code Coverage Report
+              id: coverage-report-frontend
               working-directory: ./bugtracker-frontend
               run: |
-                echo "## 📊 Frontend Test Coverage Report" >> $GITHUB_STEP_SUMMARY
+
+                echo '## 📊 Frontend Test Coverage Report' >> $GITHUB_STEP_SUMMARY
                 echo '```' >> $GITHUB_STEP_SUMMARY
                 cat full_output.txt >> $GITHUB_STEP_SUMMARY
                 echo '```' >> $GITHUB_STEP_SUMMARY
+
+                # Save coverage report as an output to be used to create PR comment
+                echo 'report<<EOF' >> $GITHUB_OUTPUT
+                cat coverage.txt >> $GITHUB_OUTPUT
+                echo 'EOF' >> $GITHUB_OUTPUT
 
             - name: Publish Frontend Unit Tests Report
               uses: dorny/test-reporter@v1
@@ -81,6 +99,23 @@ jobs:
                 name: Frontend Unit Tests Report
                 path: ./bugtracker-frontend/test-results.xml
                 reporter: jest-junit
+
+    create-coverage-comment:
+      if: github.event_name == 'pull_request'
+      needs: [unit-tests-backend]
+      runs-on: ubuntu-latest
+      permissions:
+        pull-requests: write
+      steps:
+        - name: Create Backend Coverage Comment
+          uses: peter-evans/create-or-update-comment@v4
+          with:
+            issue-number: ${{ github.event.pull_request.number }}
+            body: |
+              ## 📊 Backend Test Coverage Report
+              ```
+              ${{ needs.unit-tests-backend.outputs.coverage }}
+              ```
 #
 #   playwright-api-tests:
 #        runs-on: ubuntu-latest
