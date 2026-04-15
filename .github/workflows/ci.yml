@@ -89,7 +89,7 @@ jobs:
 
                 # Save coverage report as an output to be used to create PR comment
                 echo 'report<<EOF' >> $GITHUB_OUTPUT
-                cat coverage.txt >> $GITHUB_OUTPUT
+                cat full_output.txt >> $GITHUB_OUTPUT
                 echo 'EOF' >> $GITHUB_OUTPUT
 
             - name: Publish Frontend Unit Tests Report
@@ -116,6 +116,15 @@ jobs:
               ```
               ${{ needs.unit-tests-backend.outputs.coverage }}
               ```
+        - name: Create Frontend Coverage Comment
+          uses: peter-evans/create-or-update-comment@v4
+          with:
+            issue-number: ${{ github.event.pull_request.number }}
+            body: |
+              ## 📊 Frontend Test Coverage Report
+              ```
+              ${{ needs.unit-tests-frontend.outputs.coverage }}
+              ``` 
 #
 #   playwright-api-tests:
 #        runs-on: ubuntu-latest
