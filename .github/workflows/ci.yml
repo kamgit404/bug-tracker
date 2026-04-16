@@ -140,7 +140,10 @@ jobs:
 
             - name: Run E2E Tests
               working-directory: ./tests-e2e
-              run: npm ci && npx playwright test
+              run: |
+                npm ci
+                npx playwright install
+                npx playwright test
 
             - name: Tear down App
               run: docker compose down
