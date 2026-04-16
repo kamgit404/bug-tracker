@@ -122,15 +122,22 @@ jobs:
               ```
               ${{ needs.unit-tests-frontend.outputs.coverage }}
               ``` 
-#
-#   playwright-api-tests:
-#        runs-on: ubuntu-latest
-#        steps:
-#            - uses: actions/checkout@v5
+    
+    playwright-api-tests:
+        needs: [unit-tests-backend, unit-tests-frontend]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
 
+            - name: Launch App
+              run: |
+                docker compose up --build -d
+                npx wait-port http://localhost:8080/api/health -t 30000
+#
 #            - name: Run Playwright API Tests
 #              working-directory: ./tests-api
 #              run: npm ci && npx playwright test
+#              
 #    playwright-e2e-tests:
 #        runs-on: ubuntu-latest
 #        steps:
