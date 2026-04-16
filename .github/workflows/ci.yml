@@ -136,6 +136,25 @@ jobs:
             - name: Run API Tests
               working-directory: ./tests-api
               run: npm ci && npx playwright test
+
+            - name: Tear down App
+              run: docker compose down
+
+            - name: Upload API Test Results
+              if: always()
+              uses: actions/upload-artifact@v6
+              with:
+                name: api-test-results
+                path: ./tests-api/test-results/
+                retention-days: 30
+
+            - name: Upload API Test Playwright Report
+              if: always()
+              uses: actions/upload-artifact@v6
+              with:
+                name: api-test-playwright-report
+                path: ./tests-api/playwright-report/
+                retention-days: 30
 #    playwright-e2e-tests:
 #        needs: [app-launch]
 #        runs-on: ubuntu-latest
