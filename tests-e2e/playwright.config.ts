@@ -6,7 +6,7 @@ export default defineConfig({
   use: {
     baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
-    headless: process.env.CI ? true : false,
+    headless: process.env.CI ? true : true,
     launchOptions: {
       slowMo: process.env.CI ? 0 : 1000,
     },
