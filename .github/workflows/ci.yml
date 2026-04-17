@@ -172,15 +172,7 @@ jobs:
                 name: api-test-playwright-report
                 path: ./tests-api/playwright-report/
                 retention-days: 30
-            
-            - name: Publish API Test Results
-              uses: dorny/test-reporter@v1
-              if: always()
-              with:
-                name: Playwright API Test Results
-                path: ./tests-api/test-results/*.xml
-                reporter: jest-junit
-            
+
             - name: Upload E2E Test Results
               if: always()
               uses: actions/upload-artifact@v6
@@ -196,6 +188,28 @@ jobs:
                 name: e2e-test-playwright-report
                 path: ./tests-e2e/playwright-report/
                 retention-days: 30
+              
+            - name: Upload Performance Raw Results
+              if: always()
+              uses: actions/upload-artifact@v6
+              with:
+                name: performance-test-raw-results
+                path: summary.json
+              
+            - name: Upload Performance Test Report
+              if: always()
+              uses: actions/upload-artifact@v6
+              with:
+                name: performance-test-report
+                path: perf-results.html
+            
+            - name: Publish API Test Results
+              uses: dorny/test-reporter@v1
+              if: always()
+              with:
+                name: Playwright API Test Results
+                path: ./tests-api/test-results/*.xml
+                reporter: jest-junit
             
             - name: Publish E2E Test Results
               uses: dorny/test-reporter@v1
@@ -204,11 +218,3 @@ jobs:
                 name: Playwright E2E Test Results
                 path: ./tests-e2e/test-results/*.xml
                 reporter: jest-junit
-            
-#            - name: Publish Performance Test Results
-#              uses: dorny/test-reporter@v1
-#              if: always()
-#              with:
-#                name: k6 Performance Test Results
-#                path: ./tests-perf/perf-results.html
-#                reporter: jest-junit
