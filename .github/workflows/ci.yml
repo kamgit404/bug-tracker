@@ -147,12 +147,11 @@ jobs:
             
             - name: Set up k6
               uses: grafana/setup-k6-action@v1
-            
-            - name: Run Performance tests
-              uses: grafana/run-k6-action@v1
-              with:
-                path: ./tests-perf/script.js
-                flags: --out json=.summary.json
+#            - name: Run Performance tests
+#              uses: grafana/run-k6-action@v1
+#              with:
+#                path: ./tests-perf/script.js
+#                flags: --out json=.summary.json
 
             - name: Tear down App
               run: docker compose down
@@ -188,21 +187,7 @@ jobs:
                 name: e2e-test-playwright-report
                 path: ./tests-e2e/playwright-report/
                 retention-days: 30
-              
-            - name: Upload Performance Raw Results
-              if: always()
-              uses: actions/upload-artifact@v6
-              with:
-                name: performance-test-raw-results
-                path: summary.json
-              
-            - name: Upload Performance Test Report
-              if: always()
-              uses: actions/upload-artifact@v6
-              with:
-                name: performance-test-report
-                path: perf-results.html
-            
+
             - name: Publish API Test Results
               uses: dorny/test-reporter@v1
               if: always()
@@ -219,11 +204,68 @@ jobs:
                 path: ./tests-e2e/test-results/*.xml
                 reporter: jest-junit
 
-            - name: Publish Performance Test Report
-              if: always()
-              working-directory: ./tests-perf/
+    performance-tests:
+        needs: [api-e2e-perf-tests]
+        permissions:
+          pages: write
+          id-token: write
+          contents: read
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v5
+
+            - name: Launch App
               run: |
-                echo "## 📊 Performance Test Report" >> $GITHUB_STEP_SUMMARY
-                echo '```' >> $GITHUB_STEP_SUMMARY
-                cat perf-results.html >> $GITHUB_STEP_SUMMARY
-                echo '```' >> $GITHUB_STEP_SUMMARY
+                docker compose up --build -d
+                npx wait-port http://localhost:8080/api/health -t 30000
+
+            - name: Set up k6
+              uses: grafana/setup-k6-action@v1
+            
+            - name: Run Performance tests
+              uses: grafana/run-k6-action@v1
+              with:
+                path: ./tests-perf/script.js
+                flags: --out json=.summary.json
+            
+            - name: Prepare Pages site
+              if: always()
+              run: |
+                mkdir -p site
+                cp perf-results.html site/index.html
+            
+            - name: Upload Performance Raw Results
+              if: always()
+              uses: actions/upload-artifact@v6
+              with:
+                name: performance-test-raw-results
+                path: summary.json
+              
+            - name: Upload Performance Test Report
+              if: always()
+              uses: actions/upload-artifact@v6
+              with:
+                name: performance-test-report
+                path: perf-results.html
+
+            - name: Upload Pages artifact
+              if: always()
+              uses: actions/upload-pages-artifact@v3
+              with:
+                path: ./site
+    
+    deploy-performance-report:
+        needs: performance-tests
+        permissions:
+          pages: write
+          id-token: write
+        runs-on: ubuntu-latest
+        environment:
+          name: github-pages
+          url: ${{ steps.publish-report.outputs.page_url }}
+
+        steps:
+          - name: Deploy report to GitHub Pages
+            id: publish-report
+            uses: actions/deploy-pages@v4
