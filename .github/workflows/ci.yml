@@ -224,8 +224,8 @@ jobs:
             - name: Prepare Pages site
               if: always()
               run: |
-                mkdir -p site/performance-report
-                cp perf-results.html site/performance-report/index.html
+                mkdir -p site
+                cp perf-results.html site/index.html
             
             - name: Upload Performance Raw Results
               if: always()
