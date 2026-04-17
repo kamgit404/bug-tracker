@@ -144,9 +144,6 @@ jobs:
                 npm ci
                 npx playwright install
                 npx playwright test
-            
-            - name: Set up k6
-              uses: grafana/setup-k6-action@v1
 
             - name: Tear down App
               run: docker compose down
