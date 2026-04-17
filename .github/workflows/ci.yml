@@ -123,7 +123,7 @@ jobs:
               ${{ needs.unit-tests-frontend.outputs.coverage }}
               ``` 
 
-    playwright-api-e2e-tests:
+    api-e2e-perf-tests:
         needs: [unit-tests-backend, unit-tests-frontend]
         runs-on: ubuntu-latest
         steps:
@@ -144,6 +144,15 @@ jobs:
                 npm ci
                 npx playwright install
                 npx playwright test
+            
+            - name: Set up k6
+              uses: grafana/setup-k6-action@v1
+            
+            - name: Run Performance tests
+              uses: grafana/setup-k6-action@v1
+              with:
+                path: ./tests-perf/script.js
+                flags: --out json=.summary.json
 
             - name: Tear down App
               run: docker compose down
@@ -168,7 +177,7 @@ jobs:
               uses: dorny/test-reporter@v1
               if: always()
               with:
-                name: API Test Results
+                name: Playwright API Test Results
                 path: ./tests-api/test-results/*.xml
                 reporter: jest-junit
             
@@ -192,14 +201,14 @@ jobs:
               uses: dorny/test-reporter@v1
               if: always()
               with:
-                name: E2E Test Results
+                name: Playwright E2E Test Results
                 path: ./tests-e2e/test-results/*.xml
                 reporter: jest-junit
-#    k6-perf-tests:
-#        runs-on: ubuntu-latest
-#        steps:
-#            - uses: actions/checkout@v5
-#
-#            - name: Run k6 Performance tests
-#              working-directory: ./tests-perf
-#              run: k6 run script.js
+            
+#            - name: Publish Performance Test Results
+#              uses: dorny/test-reporter@v1
+#              if: always()
+#              with:
+#                name: k6 Performance Test Results
+#                path: ./tests-perf/perf-results.html
+#                reporter: jest-junit
