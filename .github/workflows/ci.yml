@@ -218,3 +218,12 @@ jobs:
                 name: Playwright E2E Test Results
                 path: ./tests-e2e/test-results/*.xml
                 reporter: jest-junit
+
+            - name: Publish Performance Test Report
+              if: always()
+              working-directory: ./tests-perf/
+              run: |
+                echo "## 📊 Performance Test Report" >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+                cat perf-results.html >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
