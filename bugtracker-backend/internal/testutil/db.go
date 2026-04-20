@@ -38,7 +38,7 @@ func CleanupTestDB() error {
 		".",
 		"internal/db",
 		"internal/handlers",
-		"cmd/bugtracker",
+		"cmd/server",
 	}
 
 	for _, dir := range projectDirs {

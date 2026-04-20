@@ -18,7 +18,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN go build -o main cmd/bugtracker/main.go
+RUN go build -o main cmd/server/main.go
 
 # Expose port 8080
 EXPOSE 8080
