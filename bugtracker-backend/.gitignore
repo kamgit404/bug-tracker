@@ -2,3 +2,4 @@
 data/ 
 # Ignore database file
 *.db 
+.vercel
