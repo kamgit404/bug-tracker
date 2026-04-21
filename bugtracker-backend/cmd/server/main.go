@@ -19,13 +19,13 @@ import (
 
 func main() {
 	// Load environment variables from .env file
-	err := godotenv.Load(
+	_ = godotenv.Load(
 		".env",
 		"../../.env",
 		"../.env",
 	)
-	if err != nil {
-		log.Println("No .env file found")
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using environment variables")
 	}
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
