@@ -16,7 +16,7 @@ import (
 )
 
 func TestCreateComment(t *testing.T) {
-	cleanup := setupTestDB(t)
+	cleanup := db.SetupTestDB(t)
 	defer cleanup()
 
 	bug := &models.Bug{
@@ -109,7 +109,7 @@ func TestCreateComment(t *testing.T) {
 }
 
 func TestGetComments(t *testing.T) {
-	cleanup := setupTestDB(t)
+	cleanup := db.SetupTestDB(t)
 	defer cleanup()
 
 	bug := &models.Bug{

@@ -1,5 +1,5 @@
 package testutil
-
+/*
 import (
 	"os"
 	"os/signal"
@@ -67,3 +67,5 @@ func init() {
 		}()
 	}
 }
+
+*/

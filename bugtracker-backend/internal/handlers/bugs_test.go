@@ -7,26 +7,16 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strconv"
 	"testing"
-
-	"bugtracker-backend/internal/testutil"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateBug(t *testing.T) {
-	os.Setenv("DB_PATH", testutil.GetTestDBPath())
-	defer testutil.CleanupTestDB()
-
-	err := db.Init()
-	assert.NoError(t, err)
-	defer func() {
-		db.CleanupTestDB()
-		db.Cleanup()
-	}()
+	cleanup := db.SetupTestDB(t)
+	defer cleanup()
 
 	tests := []struct {
 		name           string
@@ -94,15 +84,8 @@ func TestCreateBug(t *testing.T) {
 }
 
 func TestGetBug(t *testing.T) {
-	os.Setenv("DB_PATH", testutil.GetTestDBPath())
-	defer testutil.CleanupTestDB()
-
-	err := db.Init()
-	assert.NoError(t, err)
-	defer func() {
-		db.CleanupTestDB()
-		db.Cleanup()
-	}()
+	cleanup := db.SetupTestDB(t)
+	defer cleanup()
 
 	// Create a test bug first
 	bug := &models.Bug{
@@ -111,7 +94,7 @@ func TestGetBug(t *testing.T) {
 		Priority:    "High",
 		Status:      "Open",
 	}
-	err = db.CreateBug(bug)
+	err := db.CreateBug(bug)
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -122,7 +105,7 @@ func TestGetBug(t *testing.T) {
 	}{
 		{
 			name:           "Valid bug retrieval",
-			bugID:          "1",
+			bugID:          strconv.Itoa(bug.ID),
 			expectedStatus: http.StatusOK,
 		},
 		{
@@ -167,15 +150,8 @@ func TestGetBug(t *testing.T) {
 }
 
 func TestUpdateBug(t *testing.T) {
-	os.Setenv("DB_PATH", testutil.GetTestDBPath())
-	defer testutil.CleanupTestDB()
-
-	err := db.Init()
-	assert.NoError(t, err)
-	defer func() {
-		db.CleanupTestDB()
-		db.Cleanup()
-	}()
+	cleanup := db.SetupTestDB(t)
+	defer cleanup()
 
 	bug := &models.Bug{
 		Title:       "Original Title",
@@ -183,7 +159,7 @@ func TestUpdateBug(t *testing.T) {
 		Priority:    "Low",
 		Status:      "Open",
 	}
-	err = db.CreateBug(bug)
+	err := db.CreateBug(bug)
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -195,7 +171,7 @@ func TestUpdateBug(t *testing.T) {
 	}{
 		{
 			name:  "Valid bug update",
-			bugID: "1",
+			bugID: strconv.Itoa(bug.ID),
 			payload: models.CreateBugRequest{
 				Title:       "Updated Title",
 				Description: "Updated Description",
@@ -223,7 +199,7 @@ func TestUpdateBug(t *testing.T) {
 		},
 		{
 			name:           "Invalid JSON",
-			bugID:          "1",
+			bugID:          strconv.Itoa(bug.ID),
 			payload:        `{"invalid": json}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "invalid request body",
@@ -269,21 +245,14 @@ func TestUpdateBug(t *testing.T) {
 }
 
 func TestDeleteBug(t *testing.T) {
-	os.Setenv("DB_PATH", testutil.GetTestDBPath())
-	defer testutil.CleanupTestDB()
-
-	err := db.Init()
-	assert.NoError(t, err)
-	defer func() {
-		db.CleanupTestDB()
-		db.Cleanup()
-	}()
+	cleanup := db.SetupTestDB(t)
+	defer cleanup()
 
 	bug := &models.Bug{
 		Title:       "Test Bug",
 		Description: "Test Description",
 	}
-	err = db.CreateBug(bug)
+	err := db.CreateBug(bug)
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -294,7 +263,7 @@ func TestDeleteBug(t *testing.T) {
 	}{
 		{
 			name:           "Valid bug deletion",
-			bugID:          "1",
+			bugID:          strconv.Itoa(bug.ID),
 			expectedStatus: http.StatusNoContent,
 		},
 		{

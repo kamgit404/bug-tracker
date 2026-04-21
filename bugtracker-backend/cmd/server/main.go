@@ -14,9 +14,20 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load environment variables from .env file
+	err := godotenv.Load(
+		".env",
+		"../../.env",
+		"../.env",
+	)
+	if err != nil {
+		log.Println("No .env file found")
+	}
+
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	log.Println("Starting Bug Tracker backend server...")
 

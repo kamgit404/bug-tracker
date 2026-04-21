@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"bugtracker-backend/internal/handlers"
-	"bugtracker-backend/internal/testutil"
+	"bugtracker-backend/internal/db"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -17,15 +17,13 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Setenv("TEST_MODE", "1")
 	code := m.Run()
-	testutil.CleanupTestDB()
 	os.Exit(code)
 }
 
 func TestServerInitialization(t *testing.T) {
-	os.Setenv("DB_PATH", testutil.GetTestDBPath())
-	defer testutil.CleanupTestDB()
+	cleanup := db.SetupTestDB(t)
+	defer cleanup()
 
 	testPort := ":8081" // Use a different port for testing
 	srv := createTestServer()
@@ -63,8 +61,8 @@ func TestServerInitialization(t *testing.T) {
 }
 
 func TestCORSConfiguration(t *testing.T) {
-	os.Setenv("DB_PATH", testutil.GetTestDBPath())
-	defer testutil.CleanupTestDB()
+	cleanup := db.SetupTestDB(t)
+	defer cleanup()
 
 	testPort := ":8081"
 	srv := createTestServer()
