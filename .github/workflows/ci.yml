@@ -10,6 +10,12 @@ on:
 jobs:
     unit-tests-backend:
         runs-on: ubuntu-latest
+        defaults:
+          run:
+            working-directory: bugtracker-backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
         outputs:
             coverage: ${{ steps.coverage-report-backend.outputs.report }}
         steps:
@@ -26,7 +32,6 @@ jobs:
 
             - name: Backend Code Coverage Report
               id: coverage-report-backend
-              working-directory: ./bugtracker-backend
               run: |
 
                 go test -json -coverprofile=coverage.out -covermode=atomic ./...
@@ -44,7 +49,6 @@ jobs:
                 echo 'EOF' >> $GITHUB_OUTPUT
 
             - name: Run Backend Unit Tests
-              working-directory: ./bugtracker-backend
               run: |
 
                 go test -v ./... 2>&1 | go-junit-report > test-results.xml
