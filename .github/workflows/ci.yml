@@ -24,7 +24,7 @@ jobs:
             - name: Set up Go
               uses: actions/setup-go@v6 # Github special actions to help install Go onto Github runner instance
               with:
-                go-version: '1.21' # Specify the Go version
+                go-version: '1.25' # Specify the Go version
                 cache-dependency-path: ./bugtracker-backend/go.sum # Cache the files so that it is reused in subsequent runs
             
             - name: Install go-junit-report
