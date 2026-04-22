@@ -135,7 +135,7 @@ jobs:
 
             - name: Launch App
               env:
-                TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+                DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
               run: |
                 docker compose up --build -d
                 sleep 5
