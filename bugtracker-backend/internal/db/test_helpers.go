@@ -32,16 +32,6 @@ func SetupTestDB(t *testing.T) func() {
 	}
 
 	return func() {
-		if DB != nil {
-			query := `
-			TRUNCATE TABLE comments RESTART IDENTITY CASCADE;
-			TRUNCATE TABLE bugs RESTART IDENTITY CASCADE;
-			`
-			if _, err := DB.Exec(query); err != nil {
-				t.Fatalf("failed to clean up test database: %v", err)
-			}
-		}
-		
 		Cleanup()
 
 		_ = os.Setenv("DATABASE_URL", originalDSN)
@@ -77,6 +67,7 @@ func loadEnvFromRoot(t *testing.T) {
 
 	t.Fatal(".env file not found in any parent directory")
 }
+
 
 /*
 package db

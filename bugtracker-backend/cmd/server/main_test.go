@@ -17,6 +17,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
+	db.CleanupTestDB()
 	code := m.Run()
 	os.Exit(code)
 }

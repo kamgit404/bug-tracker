@@ -19,6 +19,11 @@ func TestCreateComment(t *testing.T) {
 	err := CreateBug(bug)
 	assert.NoError(t, err)
 
+	// IMPORTANT: Verify bug was actually persisted
+	retrievedBug, err := GetBug(bug.ID)
+	assert.NoError(t, err, "failed to retrieve created bug")
+	assert.NotNil(t, retrievedBug, "bug not found after creation")
+
 	tests := []struct {
 		name       string
 		bugID      string
