@@ -136,7 +136,13 @@ jobs:
             - name: Launch App
               run: |
                 docker compose up --build -d
+                sleep 5
+                docker compose logs bugtracker-backend
                 npx wait-port http://localhost:8080/api/health -t 30000
+            
+            - name: Debug - Show container logs on failure
+              if: failure()
+              run: docker compose logs
 
             - name: Run API Tests
               working-directory: ./tests-api
