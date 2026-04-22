@@ -137,15 +137,9 @@ jobs:
 
             - name: Launch App
               run: |
-                export DATABASE_URL="$TEST_DATABASE_URL"
-                if [ -z "$DATABASE_URL" ]; then
-                  echo "DATABASE_URL is empty"
-                  exit 1
-                fi
-                docker compose config
                 docker compose up --build -d
                 sleep 5
-                docker compose logs backend
+                docker compose logs
                 npx wait-port http://localhost:8080/api/health -t 30000
             
             - name: Debug - Show container logs on failure
