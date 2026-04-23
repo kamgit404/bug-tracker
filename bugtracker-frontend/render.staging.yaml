@@ -1,0 +1,19 @@
+version: "1"
+projects:
+- name: Bugtracker-Kamui
+  environments:
+  - name: Staging
+    services:
+    - type: web
+      name: bugtracker-frontend-staging-kamui
+      runtime: node
+      repo: https://github.com/kamui-git/bug-tracker
+      plan: free
+      envVars:
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+      region: singapore
+      buildCommand: yarn install && yarn build
+      startCommand: yarn start
+      autoDeployTrigger: commit
+      rootDir: ./bugtracker-frontend

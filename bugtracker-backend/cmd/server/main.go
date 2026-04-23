@@ -84,6 +84,7 @@ func createServer() *http.Server {
 			"https://bugtracker-staging-jameswillett.fly.dev",
 			"https://bugtracker-jameswillett.fly.dev",
 			"https://bugtracker-frontend-kamui.onrender.com",
+			"https://bugtracker-frontend-staging-kamui.onrender.com",
 		},
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders: []string{"*"},
