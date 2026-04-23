@@ -212,7 +212,6 @@ jobs:
                 reporter: jest-junit
 
     performance-tests:
-        needs: [api-e2e-tests]
         permissions:
           pages: write
           id-token: write
