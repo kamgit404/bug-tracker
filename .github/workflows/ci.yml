@@ -212,6 +212,7 @@ jobs:
                 reporter: jest-junit
 
     performance-tests:
+        needs: [unit-tests-backend, unit-tests-frontend]
         permissions:
           pages: write
           id-token: write
