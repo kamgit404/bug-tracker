@@ -76,6 +76,11 @@ func main() {
 // Production server creation
 func createServer() *http.Server {
 	r := mux.NewRouter()
+	
+	// Register all routes
+	r.HandleFunc("/api/health", handlers.HealthCheck).Methods("GET")
+	apiRouter := r.PathPrefix("/api").Subrouter()
+	handlers.RegisterRoutes(apiRouter)
 
 	// Apply CORS middleware to all routes
 	c := cors.New(cors.Options{
@@ -87,20 +92,16 @@ func createServer() *http.Server {
 			"https://bugtracker-frontend-staging-kamui.onrender.com",
 		},
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders: []string{"*"},
+		AllowedHeaders: []string{"Content-Type","Authorization",},
 		ExposedHeaders: []string{"Content-Length"},
-		AllowCredentials: true,
+		AllowCredentials: false,
 	})
 
 	// Wrap the router with CORS middleware
 	handler := c.Handler(r)
 
-	// Register all routes
-	r.HandleFunc("/api/health", handlers.HealthCheck).Methods("GET")
-	apiRouter := r.PathPrefix("/api").Subrouter()
-	handlers.RegisterRoutes(apiRouter)
-
 	log.Printf("Starting server on :8080")
+
 	return &http.Server{
 		Addr:    "0.0.0.0:8080",
 		Handler: handler,
