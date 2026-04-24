@@ -191,20 +191,22 @@ pipeline {
                 branch 'main'
             }
             environment {
-                deploy_url_backend_staging = credentials('RENDER_DEPLOY_BACKEND_STAGING')
-                deploy_url_frontend_staging = credentials('RENDER_DEPLOY_FRONTEND_STAGING')
+                DEPLOY_URL_BACKEND_STAGING = credentials('RENDER_DEPLOY_BACKEND_STAGING')
+                DEPLOY_URL_FRONTEND_STAGING = credentials('RENDER_DEPLOY_FRONTEND_STAGING')
             }
-            stage('Deploy Backend'){
-                steps{
-                    dir('bugtracker-backend'){
-                        sh 'curl $deploy_url_backend_staging'
+            stages{
+                stage('Deploy Backend'){
+                    steps{
+                        dir('bugtracker-backend'){
+                            sh 'curl $DEPLOY_URL_BACKEND_STAGING'
+                        }
                     }
                 }
-            }
-            stage('Deploy Frontend'){
-                steps{
-                    dir('bugtracker-frontend'){
-                        sh 'curl $deploy_url_frontend_staging'
+                stage('Deploy Frontend'){
+                    steps{
+                        dir('bugtracker-frontend'){
+                            sh 'curl $DEPLOY_URL_FRONTEND_STAGING'
+                        }
                     }
                 }
             }
