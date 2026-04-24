@@ -191,40 +191,24 @@ pipeline {
                 branch 'main'
             }
             environment {
-                RENDER_API_KEY = credentials('RENDER_API_KEY')
-                RENDER_BACKEND_STAGING_SERVICE_ID = credentials('RENDER_BACKEND_STAGING_SERVICE_ID')
-                RENDER_FRONTEND_STAGING_SERVICE_ID = credentials('RENDER_FRONTEND_STAGING_SERVICE_ID')
+                deploy_url_backend_staging = credentials('RENDER_DEPLOY_BACKEND_STAGING')
+                deploy_url_frontend_staging = credentials('RENDER_DEPLOY_FRONTEND_STAGING')
             }
             stage('Deploy Backend'){
                 steps{
                     dir('bugtracker-backend'){
-                        sh '''
-                            curl --request POST \
-                            --url "https://api.render.com/v1/services/$RENDER_BACKEND_STAGING_SERVICE_ID/deploys" \
-                            --header "Authorization: Bearer $RENDER_API_KEY" \
-                            --header "accept: application/json" \
-                            --header "content-type: application/json" \
-                            --data '{"clearCache":"do_not_clear"}'
-                        '''
+                        sh 'curl $deploy_url_backend_staging'
                     }
                 }
             }
             stage('Deploy Frontend'){
                 steps{
                     dir('bugtracker-frontend'){
-                        sh '''
-                            curl --request POST \
-                            --url https://api.render.com/v1/services/$RENDER_FRONTEND_STAGING_SERVICE_ID/deploys \
-                            --header "Authorization: Bearer $RENDER_API_KEY" \
-                            --header 'accept: application/json' \
-                            --header 'content-type: application/json' \
-                            --data '{"clearCache":"do_not_clear"}'
-                        '''
+                        sh 'curl $deploy_url_frontend_staging'
                     }
                 }
             }
         }
-        
     }
     
     post {
