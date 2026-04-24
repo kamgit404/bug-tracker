@@ -1,10 +1,10 @@
 {
   "scripts": {
+    "prepare": "husky",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prettier": "prettier --write .",
     "prettier:check": "prettier --check .",
-    "prepare": "husky install",
     "precommit": "lint-staged",
     "groovy-lint-jenkinsfile": "npx npm-groovy-lint --format Jenkinsfile"
   },
@@ -21,5 +21,24 @@
     "npm-groovy-lint": "^17.0.2",
     "prettier": "^3.8.2",
     "typescript-eslint": "^8.58.1"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.json": [
+      "prettier --write"
+    ],
+    "*.md": [
+      "prettier --write"
+    ],
+    "Jenkinsfile": [
+      "npx npm-groovy-lint --fix"
+    ]
   }
 }
