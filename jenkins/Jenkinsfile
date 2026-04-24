@@ -105,7 +105,7 @@ pipeline {
             }
         }
 
-        stage('Playwright Tests'){
+        stage('Test App'){
             parallel{
                 stage('API Tests'){
                     agent {
@@ -159,33 +159,74 @@ pipeline {
                         }
                     }                      
                 }
-            }
-        }
 
-        stage('Performance Tests'){
-            agent {
-                docker {
-                    image 'grafana/k6:latest'
-                    reuseNode true
-                    args '-u 0 --network=host --entrypoint=""'
+                stage('Performance Tests'){
+                    agent {
+                        docker {
+                            image 'grafana/k6:latest'
+                            reuseNode true
+                            args '-u 0 --network=host --entrypoint=""'
+                        }
+                    }
+                    steps {
+                        dir('tests-perf') {
+                            sh 'k6 run script.js'
+                        }
+                    }
+                    post {
+                        always {
+                            publishHTML target: [
+                                reportName: 'Performance Test Results',
+                                reportDir: 'tests-perf',
+                                reportFiles: 'perf-results.html',
+                            ]
+                        }
+                    }                      
                 }
             }
-            steps {
-                dir('tests-perf') {
-                    sh 'k6 run script.js'
-                }
-            }
-            post {
-                always {
-                    publishHTML target: [
-                        reportName: 'Performance Test Results',
-                        reportDir: 'tests-perf',
-                        reportFiles: 'perf-results.html',
-                    ]
-                }
-            }                      
         }
+        /*
+        stage('Deploy Staging'){
+            when{
+                branch 'main'
+            }
+            environment {
+                RENDER_API_KEY = credentials('RENDER_API_KEY')
+                RENDER_BACKEND_STAGING_SERVICE_ID = credentials('RENDER_BACKEND_STAGING_SERVICE_ID')
+                RENDER_FRONTEND_STAGING_SERVICE_ID = credentials('RENDER_FRONTEND_STAGING_SERVICE_ID')
+            }
+            stage('Deploy Backend'){
+                steps{
+                    dir('bugtracker-backend'){
+                        sh '''
+                            curl --request POST \
+                            --url "https://api.render.com/v1/services/$RENDER_BACKEND_STAGING_SERVICE_ID/deploys" \
+                            --header "Authorization: Bearer $RENDER_API_KEY" \
+                            --header "accept: application/json" \
+                            --header "content-type: application/json" \
+                            --data '{"clearCache":"do_not_clear"}'
+                        '''
+                    }
+                }
+            }
+            stage('Deploy Frontend'){
+                steps{
+                    dir('bugtracker-frontend'){
+                        sh '''
+                            curl --request POST \
+                            --url https://api.render.com/v1/services/$RENDER_FRONTEND_STAGING_SERVICE_ID/deploys \
+                            --header "Authorization: Bearer $RENDER_API_KEY" \
+                            --header 'accept: application/json' \
+                            --header 'content-type: application/json' \
+                            --data '{"clearCache":"do_not_clear"}'
+                        '''
+                    }
+                }
+            }
+        }
+        */
     }
+    
     post {
         always {
             cleanWs() // Clean workspace after all the stages have finished running
