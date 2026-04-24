@@ -58,7 +58,7 @@ pipeline {
                 stage('Unit Tests - Frontend') {
                     agent {
                         docker {
-                            image 'node:20-alpine'
+                            image 'node:24-alpine'
                             reuseNode true
                         }
                     }
@@ -185,7 +185,7 @@ pipeline {
                 }
             }
         }
-        /*
+        
         stage('Deploy Staging'){
             when{
                 branch 'main'
@@ -224,7 +224,7 @@ pipeline {
                 }
             }
         }
-        */
+        
     }
     
     post {
