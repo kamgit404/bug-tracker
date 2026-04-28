@@ -144,7 +144,6 @@ pipeline {
                     }
                     steps {
                         dir('tests-e2e') {
-                            sh 'id'
                             sh 'npx wait-port http://localhost:8080/api/health -t 30000'
                             sh 'npm ci && npx playwright test'
                         }
