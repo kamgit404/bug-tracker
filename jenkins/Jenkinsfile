@@ -216,10 +216,7 @@ pipeline {
     
     post {
         always {
-            archiveArtifacts artifacts: 'tests-e2e/playwright-report/**', allowEmptyArchive: true
-            cleanWs(
-                patterns: [[pattern: 'tests-e2e/playwright-report/**', type: 'EXCLUDE']]
-            ) 
+            cleanWs() 
         }
     }
 }
