@@ -7,204 +7,206 @@ pipeline {
         STAGING_DATABASE_URL = credentials('STAGING_DATABASE_URL')
     }
 
-    stage('Unit Tests') {
-        parallel {
-            stage('Unit Tests - Backend') {
-                agent {
-                    docker {
-                        image 'golang:1.25'
-                        reuseNode true
+    stages {
+        stage('Unit Tests') {
+            parallel {
+                stage('Unit Tests - Backend') {
+                    agent {
+                        docker {
+                            image 'golang:1.25'
+                            reuseNode true
+                        }
                     }
-                }
-                steps {
-                    dir('bugtracker-backend') {
-                        sh '''
-                            # Set Go cache to a writable location
-                            export GOCACHE="$PWD/.cache/go-build"
-                            export GOMODCACHE="$PWD/.cache/go-mod"
+                    steps {
+                        dir('bugtracker-backend') {
+                            sh '''
+                                # Set Go cache to a writable location
+                                export GOCACHE="$PWD/.cache/go-build"
+                                export GOMODCACHE="$PWD/.cache/go-mod"
 
-                            # Create cache directories
-                            mkdir -p "$GOCACHE" "$GOMODCACHE"
+                                # Create cache directories
+                                mkdir -p "$GOCACHE" "$GOMODCACHE"
 
-                            # Install go-junit-report tool
-                            go install github.com/jstemmer/go-junit-report@latest
+                                # Install go-junit-report tool
+                                go install github.com/jstemmer/go-junit-report@latest
 
-                            # Run tests and produce test result report
-                            go test -v ./... 2>&1 | go-junit-report > test-results.xml
+                                # Run tests and produce test result report
+                                go test -v ./... 2>&1 | go-junit-report > test-results.xml
 
-                            # Generate coverage report
-                            go test -coverprofile=coverage.out -covermode=atomic ./...
-                            go tool cover -html=coverage.out -o coverage.html
+                                # Generate coverage report
+                                go test -coverprofile=coverage.out -covermode=atomic ./...
+                                go tool cover -html=coverage.out -o coverage.html
 
-                            # Create reports directory and move coverage report here
-                            mkdir -p reports
-                            mv coverage.html reports/
-                        '''
+                                # Create reports directory and move coverage report here
+                                mkdir -p reports
+                                mv coverage.html reports/
+                            '''
+                        }
+                    }
+                    post {
+                        always {
+                            junit 'bugtracker-backend/test-results.xml'
+                            publishHTML target: [
+                                reportName: 'Backend Coverage Report',
+                                reportDir: 'bugtracker-backend/reports',
+                                reportFiles: 'coverage.html',
+                            ]
+                        }
                     }
                 }
-                post {
-                    always {
-                        junit 'bugtracker-backend/test-results.xml'
-                        publishHTML target: [
-                            reportName: 'Backend Coverage Report',
-                            reportDir: 'bugtracker-backend/reports',
-                            reportFiles: 'coverage.html',
-                        ]
-                    }
-                }
-            }
 
-            stage('Unit Tests - Frontend') {
-                agent {
-                    docker {
-                        image 'node:24-alpine'
-                        reuseNode true
+                stage('Unit Tests - Frontend') {
+                    agent {
+                        docker {
+                            image 'node:24-alpine'
+                            reuseNode true
+                        }
                     }
-                }
-                steps {
-                    dir('bugtracker-frontend') {
-                        sh '''
-                            # Install dependencies
-                            npm ci
+                    steps {
+                        dir('bugtracker-frontend') {
+                            sh '''
+                                # Install dependencies
+                                npm ci
 
-                            # Run tests
-                            npm test
+                                # Run tests
+                                npm test
 
-                            # Create directory for coverage report and move it there
-                            mkdir -p reports
-                            mv coverage reports/
-                        '''
+                                # Create directory for coverage report and move it there
+                                mkdir -p reports
+                                mv coverage reports/
+                            '''
+                        }
                     }
-                }
-                post {
-                    always {
-                        junit 'bugtracker-frontend/test-results.xml'
-                        publishHTML target: [
-                            reportName: 'Frontend Coverage Report',
-                            reportDir: 'bugtracker-frontend/reports/coverage',
-                            reportFiles: 'index.html',
-                        ]
-                    }
-                }
-            }
-        }
-    }
-
-    stage('Launch App') {
-        agent {
-            docker {
-                image 'docker:27.5.1'
-                reuseNode true
-                args '-v /var/run/docker.sock:/var/run/docker.sock'
-            }
-        }
-        steps {
-            //Build and run the application
-            sh 'docker compose up -d --build'
-        }
-    }
-
-    stage('Test App') {
-        parallel {
-            stage('API Tests') {
-                agent {
-                    docker {
-                        image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
-                        reuseNode true
-                        args '--network=host'
-                    }
-                }
-                steps {
-                    dir('tests-api') {
-                        // Wait for the application to be ready before running tests
-                        sh 'npx wait-port http://localhost:8080/api/health -t 30000'
-                        sh 'npm ci && npx playwright test'
-                    }
-                }
-                post {
-                    always {
-                        junit 'tests-api/test-results/results.xml'
-                        publishHTML target: [
-                            reportName: 'API Test Results',
-                            reportDir: 'tests-api/playwright-report',
-                            reportFiles: 'index.html',
-                        ]
-                    }
-                }
-            }
-
-            stage('E2E Tests') {
-                agent {
-                    docker {
-                        image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
-                        reuseNode true
-                        args '--network=host'
-                    }
-                }
-                steps {
-                    dir('tests-e2e') {
-                        sh 'npx wait-port http://localhost:8080/api/health -t 30000'
-                        sh 'npm ci && npx playwright test'
-                    }
-                }
-                post {
-                    always {
-                        junit 'tests-e2e/test-results/results.xml'
-                        publishHTML target: [
-                            reportName: 'E2E Test Results',
-                            reportDir: 'tests-e2e/playwright-report',
-                            reportFiles: 'index.html',
-                        ]
-                    }
-                }
-            }
-
-            stage('Performance Tests') {
-                agent {
-                    docker {
-                        image 'grafana/k6:latest'
-                        reuseNode true
-                        args '--network=host --entrypoint=""'
-                    }
-                }
-                steps {
-                    dir('tests-perf') {
-                        sh 'k6 run script.js'
-                    }
-                }
-                post {
-                    always {
-                        publishHTML target: [
-                            reportName: 'Performance Test Results',
-                            reportDir: 'tests-perf',
-                            reportFiles: 'perf-results.html',
-                        ]
+                    post {
+                        always {
+                            junit 'bugtracker-frontend/test-results.xml'
+                            publishHTML target: [
+                                reportName: 'Frontend Coverage Report',
+                                reportDir: 'bugtracker-frontend/reports/coverage',
+                                reportFiles: 'index.html',
+                            ]
+                        }
                     }
                 }
             }
         }
-    }
 
-    stage('Deploy Staging') {
-        when {
-            branch 'main'
+        stage('Launch App') {
+            agent {
+                docker {
+                    image 'docker:27.5.1'
+                    reuseNode true
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
+            steps {
+                //Build and run the application
+                sh 'docker compose up -d --build'
+            }
         }
-        environment {
-            DEPLOY_URL_BACKEND_STAGING = credentials('RENDER_DEPLOY_BACKEND_STAGING')
-            DEPLOY_URL_FRONTEND_STAGING = credentials('RENDER_DEPLOY_FRONTEND_STAGING')
-        }
-        stages {
-            stage('Deploy Backend') {
-                steps {
-                    dir('bugtracker-backend') {
-                        sh 'curl $DEPLOY_URL_BACKEND_STAGING'
+
+        stage('Test App') {
+            parallel {
+                stage('API Tests') {
+                    agent {
+                        docker {
+                            image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
+                            reuseNode true
+                            args '--network=host'
+                        }
+                    }
+                    steps {
+                        dir('tests-api') {
+                            // Wait for the application to be ready before running tests
+                            sh 'npx wait-port http://localhost:8080/api/health -t 30000'
+                            sh 'npm ci && npx playwright test'
+                        }
+                    }
+                    post {
+                        always {
+                            junit 'tests-api/test-results/results.xml'
+                            publishHTML target: [
+                                reportName: 'API Test Results',
+                                reportDir: 'tests-api/playwright-report',
+                                reportFiles: 'index.html',
+                            ]
+                        }
+                    }
+                }
+
+                stage('E2E Tests') {
+                    agent {
+                        docker {
+                            image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
+                            reuseNode true
+                            args '--network=host'
+                        }
+                    }
+                    steps {
+                        dir('tests-e2e') {
+                            sh 'npx wait-port http://localhost:8080/api/health -t 30000'
+                            sh 'npm ci && npx playwright test'
+                        }
+                    }
+                    post {
+                        always {
+                            junit 'tests-e2e/test-results/results.xml'
+                            publishHTML target: [
+                                reportName: 'E2E Test Results',
+                                reportDir: 'tests-e2e/playwright-report',
+                                reportFiles: 'index.html',
+                            ]
+                        }
+                    }
+                }
+
+                stage('Performance Tests') {
+                    agent {
+                        docker {
+                            image 'grafana/k6:latest'
+                            reuseNode true
+                            args '--network=host --entrypoint=""'
+                        }
+                    }
+                    steps {
+                        dir('tests-perf') {
+                            sh 'k6 run script.js'
+                        }
+                    }
+                    post {
+                        always {
+                            publishHTML target: [
+                                reportName: 'Performance Test Results',
+                                reportDir: 'tests-perf',
+                                reportFiles: 'perf-results.html',
+                            ]
+                        }
                     }
                 }
             }
-            stage('Deploy Frontend') {
-                steps {
-                    dir('bugtracker-frontend') {
-                        sh 'curl $DEPLOY_URL_FRONTEND_STAGING'
+        }
+
+        stage('Deploy Staging') {
+            when {
+                branch 'main'
+            }
+            environment {
+                DEPLOY_URL_BACKEND_STAGING = credentials('RENDER_DEPLOY_BACKEND_STAGING')
+                DEPLOY_URL_FRONTEND_STAGING = credentials('RENDER_DEPLOY_FRONTEND_STAGING')
+            }
+            stages {
+                stage('Deploy Backend') {
+                    steps {
+                        dir('bugtracker-backend') {
+                            sh 'curl $DEPLOY_URL_BACKEND_STAGING'
+                        }
+                    }
+                }
+                stage('Deploy Frontend') {
+                    steps {
+                        dir('bugtracker-frontend') {
+                            sh 'curl $DEPLOY_URL_FRONTEND_STAGING'
+                        }
                     }
                 }
             }
