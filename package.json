@@ -38,7 +38,7 @@
       "prettier --write"
     ],
     "Jenkinsfile": [
-      "npx npm-groovy-lint --fix"
+      "npx npm-groovy-lint --format Jenkinsfile"
     ]
   }
 }
