@@ -8,9 +8,17 @@ pipeline {
     }
 
     stages {
-        stage('Unit Tests'){
-            parallel{
-                stage('Unit Tests - Backend'){
+        stage('Validate') {
+            steps {
+                script {
+                    sh 'ls -la'
+                }
+            }
+        }
+
+        stage('Unit Tests') {
+            parallel {
+                stage('Unit Tests - Backend') {
                     agent {
                         docker {
                             image 'golang:1.25'
@@ -18,7 +26,7 @@ pipeline {
                         }
                     }
                     steps {
-                        dir('bugtracker-backend'){
+                        dir('bugtracker-backend') {
                             sh '''
                                 # Set Go cache to a writable location
                                 export GOCACHE="$PWD/.cache/go-build"
@@ -63,7 +71,7 @@ pipeline {
                         }
                     }
                     steps {
-                        dir('bugtracker-frontend'){
+                        dir('bugtracker-frontend') {
                             sh '''
                                 # Install dependencies
                                 npm ci
@@ -91,7 +99,7 @@ pipeline {
             }
         }
 
-        stage('Launch App'){
+        stage('Launch App') {
             agent {
                 docker {
                     image 'docker:27.5.1'
@@ -105,9 +113,9 @@ pipeline {
             }
         }
 
-        stage('Test App'){
-            parallel{
-                stage('API Tests'){
+        stage('Test App') {
+            parallel {
+                stage('API Tests') {
                     agent {
                         docker {
                             image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
@@ -157,10 +165,10 @@ pipeline {
                                 reportFiles: 'index.html',
                             ]
                         }
-                    }                      
+                    }
                 }
 
-                stage('Performance Tests'){
+                stage('Performance Tests') {
                     agent {
                         docker {
                             image 'grafana/k6:latest'
@@ -181,30 +189,30 @@ pipeline {
                                 reportFiles: 'perf-results.html',
                             ]
                         }
-                    }                      
+                    }
                 }
             }
         }
-        
-        stage('Deploy Staging'){
-            when{
+
+        stage('Deploy Staging') {
+            when {
                 branch 'main'
             }
             environment {
                 DEPLOY_URL_BACKEND_STAGING = credentials('RENDER_DEPLOY_BACKEND_STAGING')
                 DEPLOY_URL_FRONTEND_STAGING = credentials('RENDER_DEPLOY_FRONTEND_STAGING')
             }
-            stages{
-                stage('Deploy Backend'){
-                    steps{
-                        dir('bugtracker-backend'){
+            stages {
+                stage('Deploy Backend') {
+                    steps {
+                        dir('bugtracker-backend') {
                             sh 'curl $DEPLOY_URL_BACKEND_STAGING'
                         }
                     }
                 }
-                stage('Deploy Frontend'){
-                    steps{
-                        dir('bugtracker-frontend'){
+                stage('Deploy Frontend') {
+                    steps {
+                        dir('bugtracker-frontend') {
                             sh 'curl $DEPLOY_URL_FRONTEND_STAGING'
                         }
                     }
@@ -212,10 +220,10 @@ pipeline {
             }
         }
     }
-    
+
     post {
         always {
-            cleanWs() 
+            cleanWs()
         }
     }
 }

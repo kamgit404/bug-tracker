@@ -36,6 +36,9 @@
     ],
     "*.md": [
       "prettier --write"
+    ],
+    "Jenkinsfile": [
+      "npx npm-groovy-lint --fix"
     ]
   }
 }
