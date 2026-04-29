@@ -188,7 +188,9 @@ pipeline {
 
         stage('Deploy Staging') {
             when {
-                branch 'main'
+                expression {
+                    return env.GIT_BRANCH == 'origin/main'
+                }
             }
             environment {
                 DEPLOY_URL_BACKEND_STAGING = credentials('RENDER_DEPLOY_BACKEND_STAGING')
