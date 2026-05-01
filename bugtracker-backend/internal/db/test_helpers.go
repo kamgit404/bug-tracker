@@ -1,11 +1,15 @@
 package db
 
 import (
+	"database/sql"
+	"fmt"
 	"os"
 	"testing"
 	"path/filepath"
 	"github.com/joho/godotenv"
 )
+
+var TestDB *sql.DB
 
 func SetupTestDB(t *testing.T) func() {
 	t.Helper()
@@ -36,6 +40,17 @@ func SetupTestDB(t *testing.T) func() {
 
 		_ = os.Setenv("DATABASE_URL", originalDSN)
 	}
+}
+
+func CleanupTestDB() error {
+	if TestDB != nil {
+		query := `TRUNCATE TABLE comments, bugs RESTART IDENTITY CASCADE`
+		if _, err := TestDB.Exec(query); err != nil {
+			return fmt.Errorf("failed to clean up test database: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func loadEnvFromRoot(t *testing.T) {

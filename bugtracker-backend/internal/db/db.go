@@ -246,14 +246,3 @@ func Cleanup() {
 	}
 	initialized = false
 }
-
-func CleanupTestDB() error {
-	if DB != nil {
-		query := `TRUNCATE TABLE comments, bugs RESTART IDENTITY CASCADE`
-		if _, err := DB.Exec(query); err != nil {
-			return fmt.Errorf("failed to clean up test database: %w", err)
-		}
-	}
-
-	return nil
-}
