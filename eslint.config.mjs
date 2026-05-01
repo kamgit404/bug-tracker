@@ -28,7 +28,8 @@ export default defineConfig([
     files: ['**/*.ts'],
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.json'],
+        project: ['./tsconfig.eslint.json'],
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     rules: {

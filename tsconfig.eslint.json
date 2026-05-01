@@ -1,0 +1,7 @@
+{
+  "extends": "./tests-e2e/tsconfig.json",
+  "include": ["tests-api/", "tests-e2e/", "eslint.config.mjs"],
+  "compilerOptions": {
+    "types": ["node"]
+  }
+}

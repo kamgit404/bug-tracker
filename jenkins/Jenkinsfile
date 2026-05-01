@@ -202,11 +202,9 @@ pipeline {
             }
             environment {
                 STAGING_APP_BASE_URL = credentials('STAGING_APP_URL')
-                STAGING_API_BASE_URL = credentials('STAGING_API_URL')
             }
             steps {
                 dir('tests-e2e') {
-                    sh 'npx wait-port $STAGING_API_BASE_URL/api/health -t 30000'
                     sh 'npm ci && npx playwright test'
                 }
             }

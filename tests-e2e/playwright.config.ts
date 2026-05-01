@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: '.',
   testMatch: 'integration.spec.ts',
   use: {
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000',
+    baseURL: process.env.STAGING_APP_BASE_URL ?? 'http://localhost:3000',
     trace: 'on-first-retry',
     headless: process.env.CI ? true : true,
     launchOptions: {
