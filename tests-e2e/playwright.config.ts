@@ -1,4 +1,10 @@
 import { defineConfig } from '@playwright/test';
+import { config } from 'dotenv';
+import path from 'path';
+
+config({
+  path: path.resolve(process.cwd(), '../.env'),
+});
 
 export default defineConfig({
   testDir: '.',
@@ -6,7 +12,7 @@ export default defineConfig({
   use: {
     baseURL: process.env.STAGING_APP_BASE_URL ?? 'http://localhost:3000',
     trace: 'on-first-retry',
-    headless: process.env.CI ? true : true,
+    headless: process.env.CI ? true : false,
     launchOptions: {
       slowMo: process.env.CI ? 0 : 1000,
     },
