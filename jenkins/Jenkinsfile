@@ -134,32 +134,6 @@ pipeline {
                     }
                 }
 
-                stage('E2E Tests') {
-                    agent {
-                        docker {
-                            image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
-                            reuseNode true
-                            args '--network=host'
-                        }
-                    }
-                    steps {
-                        dir('tests-e2e') {
-                            sh 'npx wait-port http://localhost:8080/api/health -t 30000'
-                            sh 'npm ci && npx playwright test'
-                        }
-                    }
-                    post {
-                        always {
-                            junit 'tests-e2e/test-results/results.xml'
-                            publishHTML target: [
-                                reportName: 'E2E Test Results',
-                                reportDir: 'tests-e2e/playwright-report',
-                                reportFiles: 'index.html',
-                            ]
-                        }
-                    }
-                }
-
                 stage('Performance Tests') {
                     agent {
                         docker {
@@ -210,6 +184,40 @@ pipeline {
                             sh 'curl $DEPLOY_URL_FRONTEND_STAGING'
                         }
                     }
+                }
+            }
+        }
+
+        stage('Post Deployment Tests') {
+            when {
+                expression {
+                    return env.GIT_BRANCH == 'origin/main'
+                }
+            }
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.50.0-jammy'
+                    reuseNode true
+                }
+            }
+            environment {
+                STAGING_APP_BASE_URL = credentials('STAGING_APP_URL')
+                STAGING_API_BASE_URL = credentials('STAGING_API_URL')
+            }
+            steps {
+                dir('tests-e2e') {
+                    sh 'npx wait-port $STAGING_API_BASE_URL/api/health -t 30000'
+                    sh 'npm ci && npx playwright test'
+                }
+            }
+            post {
+                always {
+                    junit 'tests-e2e/test-results/results.xml'
+                    publishHTML target: [
+                        reportName: 'Post-Deployment Test Results',
+                        reportDir: 'tests-e2e/playwright-report',
+                        reportFiles: 'index.html',
+                    ]
                 }
             }
         }
