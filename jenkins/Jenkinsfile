@@ -170,21 +170,11 @@ pipeline {
                 DEPLOY_URL_BACKEND_STAGING = credentials('RENDER_DEPLOY_BACKEND_STAGING')
                 DEPLOY_URL_FRONTEND_STAGING = credentials('RENDER_DEPLOY_FRONTEND_STAGING')
             }
-            stages {
-                stage('Deploy Backend') {
-                    steps {
-                        dir('bugtracker-backend') {
-                            sh 'curl $DEPLOY_URL_BACKEND_STAGING'
-                        }
-                    }
-                }
-                stage('Deploy Frontend') {
-                    steps {
-                        dir('bugtracker-frontend') {
-                            sh 'curl $DEPLOY_URL_FRONTEND_STAGING'
-                        }
-                    }
-                }
+            steps {
+                sh '''
+                    curl "$DEPLOY_URL_BACKEND_STAGING"
+                    curl "$DEPLOY_URL_FRONTEND_STAGING"
+                '''
             }
         }
 
@@ -231,21 +221,11 @@ pipeline {
                 DEPLOY_URL_FRONTEND_PROD = credentials('RENDER_DEPLOY_FRONTEND_PROD')
                 APP_ENV = 'production'
             }
-            stages {
-                stage('Deploy Backend') {
-                    steps {
-                        dir('bugtracker-backend') {
-                            sh 'curl $DEPLOY_URL_BACKEND_PROD'
-                        }
-                    }
-                }
-                stage('Deploy Frontend') {
-                    steps {
-                        dir('bugtracker-frontend') {
-                            sh 'curl $DEPLOY_URL_FRONTEND_PROD'
-                        }
-                    }
-                }
+            steps {
+                sh '''
+                    curl "$DEPLOY_URL_BACKEND_PROD"
+                    curl "$DEPLOY_URL_FRONTEND_PROD"
+                '''
             }
         }
     }
