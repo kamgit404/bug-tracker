@@ -219,6 +219,35 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy Production') {
+            when {
+                expression {
+                    return env.GIT_BRANCH == 'origin/main'
+                }
+            }
+            environment {
+                DEPLOY_URL_BACKEND_PROD = credentials('RENDER_DEPLOY_BACKEND_PROD')
+                DEPLOY_URL_FRONTEND_PROD = credentials('RENDER_DEPLOY_FRONTEND_PROD')
+                APP_ENV = 'production'
+            }
+            stages {
+                stage('Deploy Backend') {
+                    steps {
+                        dir('bugtracker-backend') {
+                            sh 'curl $DEPLOY_URL_BACKEND_PROD'
+                        }
+                    }
+                }
+                stage('Deploy Frontend') {
+                    steps {
+                        dir('bugtracker-frontend') {
+                            sh 'curl $DEPLOY_URL_FRONTEND_PROD'
+                        }
+                    }
+                }
+            }
+        }
     }
 
     post {
