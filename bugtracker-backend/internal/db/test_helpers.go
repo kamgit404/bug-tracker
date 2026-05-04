@@ -2,11 +2,11 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	"os"
 	"testing"
-	"path/filepath"
-	"github.com/joho/godotenv"
+	"fmt"
+	"strings"
+	"bugtracker-backend/internal/config"
 )
 
 var TestDB *sql.DB
@@ -19,14 +19,6 @@ func SetupTestDB(t *testing.T) func() {
 		loadEnvFromRoot(t)
 	}
 
-	testDSN := os.Getenv("TEST_DATABASE_URL")
-	if testDSN == "" {
-		t.Fatal("TEST_DATABASE_URL is not set")
-	}
-
-	originalDSN := os.Getenv("DATABASE_URL")
-	_ = os.Setenv("DATABASE_URL", testDSN)
-
 	if initialized {
 		Cleanup()
 	}
@@ -37,17 +29,24 @@ func SetupTestDB(t *testing.T) func() {
 
 	return func() {
 		Cleanup()
-
-		_ = os.Setenv("DATABASE_URL", originalDSN)
 	}
 }
 
 func CleanupTestDB() error {
-	if TestDB != nil {
-		query := `TRUNCATE TABLE comments, bugs RESTART IDENTITY CASCADE`
-		if _, err := TestDB.Exec(query); err != nil {
-			return fmt.Errorf("failed to clean up test database: %w", err)
-		}
+	if strings.ToLower(os.Getenv("APP_ENV")) == "production" {
+		return fmt.Errorf("refusing to cleanup database in production")
+	}
+
+	if DB == nil {
+		return nil
+	}
+
+	query := `
+		TRUNCATE TABLE comments, bugs RESTART IDENTITY CASCADE;
+	`
+
+	if _, err := DB.Exec(query); err != nil {
+		return fmt.Errorf("failed to clean up test database: %w", err)
 	}
 
 	return nil
@@ -56,29 +55,10 @@ func CleanupTestDB() error {
 func loadEnvFromRoot(t *testing.T) {
 	t.Helper()
 
-	wd, err := os.Getwd()
+	dir, err := config.LoadEnvFromRoot()
 	if err != nil {
-		t.Fatalf("failed to get working directory: %v", err)
+		t.Fatalf("failed to load .env: %v", err)
 	}
 
-	// Walk up until bugtracker-backend
-	dir := wd
-	for {
-		if _, err := os.Stat(filepath.Join(dir, ".env")); err == nil {
-			// Found .env
-			if err := godotenv.Load(filepath.Join(dir, ".env")); err != nil {
-				t.Fatalf("failed to load .env: %v", err)
-			}
-			t.Logf("Loaded .env from: %s", dir)
-			return
-		}
-
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			break
-		}
-		dir = parent
-	}
-
-	t.Fatal(".env file not found in any parent directory")
+	t.Logf("Loaded .env from: %s", dir)
 }

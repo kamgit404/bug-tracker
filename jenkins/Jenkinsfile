@@ -4,7 +4,7 @@ pipeline {
     environment {
         DATABASE_URL = credentials('DATABASE_URL')
         TEST_DATABASE_URL = credentials('TEST_DATABASE_URL')
-        STAGING_DATABASE_URL = credentials('STAGING_DATABASE_URL')
+        APP_ENV = 'staging'
     }
 
     stages {

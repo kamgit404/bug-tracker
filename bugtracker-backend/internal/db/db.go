@@ -4,8 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
-
+	"bugtracker-backend/internal/config"
 	"bugtracker-backend/internal/models"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -17,7 +16,7 @@ var (
 )
 
 func Init() error {
-	dsn := os.Getenv("DATABASE_URL")
+	dsn := config.GetDatabaseURL()
 
 	if dsn == "" {
 		return fmt.Errorf("DATABASE_URL is not set")

@@ -11,20 +11,16 @@ import (
 
 	"bugtracker-backend/internal/db"
 	"bugtracker-backend/internal/handlers"
+	"bugtracker-backend/internal/config"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
-	"github.com/joho/godotenv"
+	//"github.com/joho/godotenv"
 )
 
 func main() {
 	// Load environment variables from .env file
-	_ = godotenv.Load(
-		".env",
-		"../../.env",
-		"../.env",
-	)
-	if err := godotenv.Load(); err != nil {
+	if _, err := config.LoadEnvFromRoot(); err != nil {
 		log.Println("No .env file found, using environment variables")
 	}
 

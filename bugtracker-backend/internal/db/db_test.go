@@ -3,7 +3,7 @@ package db
 import (
 	"os"
 	"testing"
-
+	"strings"
 	"bugtracker-backend/internal/models"
 
 	"github.com/stretchr/testify/assert"
@@ -47,17 +47,24 @@ func TestCleanup(t *testing.T) {
 }
 
 func TestInitWithInvalidDSN(t *testing.T) {
-	originalDSN := os.Getenv("DATABASE_URL")
-	defer func() {
-		_ = os.Setenv("DATABASE_URL", originalDSN)
-		Cleanup()
-	}()
+	Cleanup()
+	
+	env := strings.ToLower(os.Getenv("APP_ENV"))
+	invalidDSN := "postgres://invalid:invalid@localhost:1/invalid?sslmode=disable"
+
+	if env == "production" {
+		t.Setenv("DATABASE_URL", invalidDSN)
+	} else {
+		t.Setenv("TEST_DATABASE_URL", invalidDSN)
+		t.Setenv("DATABASE_URL", invalidDSN)
+	}
+
+	err := Init()
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to ping database")
 
 	Cleanup()
-
-	t.Setenv("DATABASE_URL", "postgres://invalid:invalid@localhost:1/invalid?sslmode=disable")
-	err := Init()
-	assert.Error(t, err)
 }
 
 func TestConcurrentInitializations(t *testing.T) {

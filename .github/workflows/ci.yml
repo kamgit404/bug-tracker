@@ -10,6 +10,7 @@ on:
 env:
   DATABASE_URL: ${{ secrets.DATABASE_URL }}
   TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+  APP_ENV: staging
 
 jobs:
     unit-tests-backend:
