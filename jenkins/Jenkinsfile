@@ -175,7 +175,7 @@ pipeline {
             }
             steps {
                 sh '''
-                    // Send deploy request and poll status until deployment is live or failed
+                    # Send deploy request and poll status until deployment is live or failed
                     set -e
 
                     deploy_and_wait() {
@@ -191,7 +191,7 @@ pipeline {
                             exit 1
                         fi
 
-                        // Poll deployment status every 5 seconds
+                        # Poll deployment status every 5 seconds
                         echo "⏱️Polling status of deployment $DEPLOY_ID"
 
                         for ((i=1; i <=60; i++)); do
