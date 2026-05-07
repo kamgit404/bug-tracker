@@ -24,8 +24,9 @@ func GetDatabaseURL() string {
 			if testDSN != "" {
 				return testDSN
 			}
-
-			panic("TEST_DATABASE_URL must be set for local & staging environments")
+			else {
+				panic("TEST_DATABASE_URL must be set for local & staging environments")
+			}
 	}
 }
 

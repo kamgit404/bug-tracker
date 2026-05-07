@@ -169,11 +169,65 @@ pipeline {
             environment {
                 DEPLOY_URL_BACKEND_STAGING = credentials('RENDER_DEPLOY_BACKEND_STAGING')
                 DEPLOY_URL_FRONTEND_STAGING = credentials('RENDER_DEPLOY_FRONTEND_STAGING')
+                RENDER_API_KEY = credentials('RENDER_API_KEY')
+                STAGING_BACKEND_SERVICEID = credentials('STAGING_BACKEND_SERVICEID')
+                STAGING_FRONTEND_SERVICEID = credentials('STAGING_FRONTEND_SERVICEID')
             }
             steps {
                 sh '''
-                    curl "$DEPLOY_URL_BACKEND_STAGING"
-                    curl "$DEPLOY_URL_FRONTEND_STAGING"
+                    // Send deploy request and poll status until deployment is live or failed
+                    set -e
+
+                    deploy_and_wait() {
+                        DEPLOY_HOOK_URL=$1
+                        SERVICE_ID=$2
+                        SERVICE_NAME$3
+
+                        echo "🚀 Start deployment for $SERVICE_NAME"
+                        DEPLOY_ID=$(curl "$DEPLOY_HOOK_URL")
+
+                        if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" == "null" ]; then
+                            echo "No deploy ID returned"
+                            exit 1
+                        fi
+
+                        // Poll deployment status every 5 seconds
+                        echo "⏱️Polling status of deployment $DEPLOY_ID"
+
+                        for ((i=1; i <=60; i++)); do
+                            STATUS=$(curl -sS --fail \
+                            --request GET \
+                            --url "https://api.render.com/v1/services/$SERVICE_ID/deploys/$DEPLOY_ID" \
+                            --header "Authorization: Bearer $RENDER_API_KEY" \
+                            | jq -r '.status')
+
+                            echo "$i - $SERVICE_NAME deployment status: $STATUS"
+                            if [ "$STATUS" == "live" ]; then
+                                echo "✅ $SERVICE_NAME deployment is live!"
+                                return 0
+                            elif [[ "$STATUS" == *failed* ]]; then
+                                echo "❌ $SERVICE_NAME deployment failed"
+                                exit 1
+                            fi
+
+                            sleep 5
+                        done
+
+                        echo "$SERVICE_NAME deployment did not become live within expected time"
+                        exit 1
+                    }
+
+                    # Deploy backend first
+                    deploy_and_wait \
+                    "$DEPLOY_URL_BACKEND_STAGING" \
+                    "$STAGING_BACKEND_SERVICEID" \
+                    "bugtracker-backend-staging-kamui"
+
+                    # Deploy frontend only if backend succeeded
+                    deploy_and_wait \
+                    "$DEPLOY_URL_FRONTEND_STAGING" \
+                    "$STAGING_FRONTEND_SERVICEID" \
+                    "bugtracker-frontend-staging-kamui"
                 '''
             }
         }
@@ -207,25 +261,6 @@ pipeline {
                         reportFiles: 'index.html',
                     ]
                 }
-            }
-        }
-
-        stage('Deploy Production') {
-            when {
-                expression {
-                    return env.GIT_BRANCH == 'origin/main'
-                }
-            }
-            environment {
-                DEPLOY_URL_BACKEND_PROD = credentials('RENDER_DEPLOY_BACKEND_PROD')
-                DEPLOY_URL_FRONTEND_PROD = credentials('RENDER_DEPLOY_FRONTEND_PROD')
-                APP_ENV = 'production'
-            }
-            steps {
-                sh '''
-                    curl "$DEPLOY_URL_BACKEND_PROD"
-                    curl "$DEPLOY_URL_FRONTEND_PROD"
-                '''
             }
         }
     }
