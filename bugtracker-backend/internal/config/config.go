@@ -18,15 +18,15 @@ func GetDatabaseURL() string {
 				panic("DATABASE_URL must be set in production")
 			}
 			return dsn
-
-		default: // local, staging
+		case (env !== "production"):
 			testDSN := os.Getenv("TEST_DATABASE_URL")
 			if testDSN != "" {
 				return testDSN
 			}
-			else {
-				panic("TEST_DATABASE_URL must be set for local & staging environments")
-			}
+			panic("TEST_DATABASE_URL must be set for local & staging environments")
+
+		default:
+			panic("Environment variable APP_ENV is missing")
 	}
 }
 
