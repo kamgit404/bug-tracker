@@ -12,6 +12,9 @@ RUN echo "deb [arch=$(dpkg --print-architecture) \
   https://download.docker.com/linux/debian \
   $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
 
-RUN apt-get update && apt-get install -y docker-ce-cli
+RUN apt-get update && \
+    apt-get install -y docker-ce-cli && \
+    apt-get install -y jq && \
+    apt-get clean
 
 USER jenkins
