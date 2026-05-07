@@ -12,21 +12,21 @@ func GetDatabaseURL() string {
 	env := strings.ToLower(os.Getenv("APP_ENV"))
 
 	switch env {
-		case "production":
-			dsn := os.Getenv("DATABASE_URL")
-			if dsn == "" {
-				panic("DATABASE_URL must be set in production")
-			}
-			return dsn
-		case (env !== "production"):
-			testDSN := os.Getenv("TEST_DATABASE_URL")
-			if testDSN != "" {
-				return testDSN
-			}
-			panic("TEST_DATABASE_URL must be set for local & staging environments")
+	case "production":
+		dsn := os.Getenv("DATABASE_URL")
+		if dsn == "" {
+			panic("DATABASE_URL must be set in production")
+		}
+		return dsn
+	case "local", "staging", "test":
+		testDSN := os.Getenv("TEST_DATABASE_URL")
+		if testDSN != "" {
+			return testDSN
+		}
+		panic("TEST_DATABASE_URL must be set")
 
-		default:
-			panic("Environment variable APP_ENV is missing")
+	default:
+		panic("APP_ENV is invalid or missing")
 	}
 }
 
