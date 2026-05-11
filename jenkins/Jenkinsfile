@@ -206,6 +206,7 @@ pipeline {
                             if [ "$STATUS" = "live" ]; then
                                 echo "✅ $SERVICE_NAME deployment is live!"
                                 return 0
+                            fi
 
                             case "$STATUS" in
                             *"failed"*|*"canceled"*|*"deactivated"*)
