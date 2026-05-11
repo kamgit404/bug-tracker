@@ -195,7 +195,7 @@ pipeline {
                         echo "⏱️Polling status of deployment $DEPLOY_ID"
 
                         i=1
-                        while [ $i -le 60 ]; do
+                        while [ "$i" -le 30 ]; do
                              STATUS=$(curl -sS --fail \
                             --request GET \
                             --url "https://api.render.com/v1/services/$SERVICE_ID/deploys/$DEPLOY_ID" \
@@ -206,13 +206,16 @@ pipeline {
                             if [ "$STATUS" = "live" ]; then
                                 echo "✅ $SERVICE_NAME deployment is live!"
                                 return 0
-                            elif [[ "$STATUS" == *failed* ]]; then
-                                echo "❌ $SERVICE_NAME deployment failed"
+
+                            case "$STATUS" in
+                            *"failed"*|*"canceled"*|*"deactivated"*)
+                                echo "❌ $SERVICE_NAME deployment failed with status: $STATUS"
                                 exit 1
-                            fi
+                                ;;
+                            esac
 
                             sleep 5
-                            i = $((i++))
+                            i=$((i + 1))
                         done
 
                         echo "$SERVICE_NAME deployment did not become live within expected time"
