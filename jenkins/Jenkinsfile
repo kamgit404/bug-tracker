@@ -181,7 +181,7 @@ pipeline {
                     deploy_and_wait() {
                         DEPLOY_HOOK_URL=$1
                         SERVICE_ID=$2
-                        SERVICE_NAME$3
+                        SERVICE_NAME=$3
 
                         echo "🚀 Start deployment for $SERVICE_NAME"
                         DEPLOY_ID=$(curl "$DEPLOY_HOOK_URL")
