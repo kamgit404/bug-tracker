@@ -175,7 +175,7 @@ pipeline {
             }
             steps {
                 sh '''
-                    # Send deploy request and poll status until deployment is live or failed
+                    #!/bin/bash
                     set -e
 
                     deploy_and_wait() {
@@ -184,26 +184,25 @@ pipeline {
                         SERVICE_NAME=$3
 
                         echo "🚀 Start deployment for $SERVICE_NAME"
-                        DEPLOY_ID=$(curl "$DEPLOY_HOOK_URL" | jq -r '.id')
+                        DEPLOY_ID=$(curl "$DEPLOY_HOOK_URL" | jq -r '.deploy.id')
 
-                        if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" == "null" ]; then
+                        if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" = "null" ]; then
                             echo "No deploy ID returned"
                             exit 1
                         fi
 
-                        # Poll deployment status every 5 seconds
                         echo "⏱️Polling status of deployment $DEPLOY_ID"
 
-                        i=1
-                        while [ $i -le 60 ]; do
-                             STATUS=$(curl -sS --fail \
+                        for ((i=1; i <=60; i++)); do
+                            STATUS=$(curl -sS --fail \
                             --request GET \
                             --url "https://api.render.com/v1/services/$SERVICE_ID/deploys/$DEPLOY_ID" \
                             --header "Authorization: Bearer $RENDER_API_KEY" \
                             | jq -r '.status')
 
                             echo "$i - $SERVICE_NAME deployment status: $STATUS"
-                            if [ "$STATUS" == "live" ]; then
+
+                            if [ "$STATUS" = "live" ]; then
                                 echo "✅ $SERVICE_NAME deployment is live!"
                                 return 0
                             elif [[ "$STATUS" == *failed* ]]; then
@@ -212,7 +211,6 @@ pipeline {
                             fi
 
                             sleep 5
-                            i = $((i++))
                         done
 
                         echo "$SERVICE_NAME deployment did not become live within expected time"
