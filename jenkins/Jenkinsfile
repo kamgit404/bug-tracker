@@ -184,7 +184,7 @@ pipeline {
                         SERVICE_NAME=$3
 
                         echo "🚀 Start deployment for $SERVICE_NAME"
-                        DEPLOY_ID=$(curl "$DEPLOY_HOOK_URL")
+                        DEPLOY_ID=$(curl "$DEPLOY_HOOK_URL" | jq -r '.id'))
 
                         if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" == "null" ]; then
                             echo "No deploy ID returned"
