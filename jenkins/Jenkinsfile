@@ -195,7 +195,7 @@ pipeline {
                         echo "⏱️Polling status of deployment $DEPLOY_ID"
 
                         i=1
-                        while [ "$i" -le 30 ]; do
+                        while [ "$i" -le 40 ]; do
                             STATUS=$(curl -sS --fail \
                             --request GET \
                             --url "https://api.render.com/v1/services/$SERVICE_ID/deploys/$DEPLOY_ID" \
@@ -305,7 +305,7 @@ pipeline {
                         echo "⏱️Polling status of production deployment $DEPLOY_ID"
 
                         i=1
-                        while [ "$i" -le 30 ]; do
+                        while [ "$i" -le 40 ]; do
                             STATUS=$(curl -sS --fail \
                             --request GET \
                             --url "https://api.render.com/v1/services/$SERVICE_ID/deploys/$DEPLOY_ID" \
