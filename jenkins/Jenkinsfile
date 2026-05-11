@@ -194,8 +194,9 @@ pipeline {
                         # Poll deployment status every 5 seconds
                         echo "⏱️Polling status of deployment $DEPLOY_ID"
 
-                        for ((i=1; i <=60; i++)); do
-                            STATUS=$(curl -sS --fail \
+                        i=1
+                        while [ $i -le 60 ]; do
+                             STATUS=$(curl -sS --fail \
                             --request GET \
                             --url "https://api.render.com/v1/services/$SERVICE_ID/deploys/$DEPLOY_ID" \
                             --header "Authorization: Bearer $RENDER_API_KEY" \
@@ -211,6 +212,7 @@ pipeline {
                             fi
 
                             sleep 5
+                            i = $((i++))
                         done
 
                         echo "$SERVICE_NAME deployment did not become live within expected time"
