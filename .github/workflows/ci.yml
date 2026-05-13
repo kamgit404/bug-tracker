@@ -269,7 +269,7 @@ jobs:
                 path: ./site
     
     deploy-performance-report:
-        if: always()
+        if: github.ref == 'refs/heads/main'
         needs: performance-tests
         permissions:
           pages: write
