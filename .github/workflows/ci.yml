@@ -2,15 +2,19 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: 
+      - main
+      - staging
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - staging
   workflow_dispatch:
 
 env:
   DATABASE_URL: ${{ secrets.DATABASE_URL }}
   TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
-  APP_ENV: staging
+  RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
 
 jobs:
     unit-tests-backend:
@@ -127,42 +131,80 @@ jobs:
               ## 📊 Frontend Test Coverage Report
               ```
               ${{ needs.unit-tests-frontend.outputs.coverage }}
-              ``` 
 
-    api-e2e-tests:
+    deploy:
+        if: ${{ github.ref_name == 'main' || github.ref_name == 'staging' }}
         needs: [unit-tests-backend, unit-tests-frontend]
+        environment:  ${{ github.ref_name == 'main' || 'staging' }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: Deploy
+              run: |
+                DEPLOY_HOOK_URL=$1
+                SERVICE_ID=$2
+                SERVICE_NAME=$3
+                
+                deploy_and_wait() {
+                  echo "🚀 Deploying to staging environment..."
+                  DEPLOY_ID=$(curl "$DEPLOY_HOOK_URL" | jq -r '.deploy.id')
+
+                  if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" = "null" ]; then
+                      echo "No deploy ID returned"
+                      exit 1
+                  fi
+                  
+                  echo "⏱️Polling status of deployment $SERVICE_NAME"
+
+                  i=1
+                  while [ "$i" -le 40 ]; do
+                      STATUS=$(curl -sS --fail \
+                      --request GET \
+                      --url "https://api.render.com/v1/services/$SERVICE_ID/deploys/$DEPLOY_ID" \
+                      --header "Authorization: Bearer $RENDER_API_KEY" \
+                      | jq -r '.status')
+
+                      echo "$SERVICE_NAME deployment status: $STATUS"
+                      if [ "$STATUS" = "live" ]; then
+                          echo "✅ $SERVICE_NAME deployment is live! 🎉"
+                          return 0
+                      fi
+
+                      case "$STATUS" in
+                      *"failed"*|*"canceled"*|*"deactivated"*)
+                          echo "❌ $SERVICE_NAME deployment failed with status: $STATUS"
+                          exit 1
+                          ;;
+                      esac
+
+                      sleep 5
+                      i=$((i + 1))
+                  done
+
+                  echo "$SERVICE_NAME deployment did not become live within expected time"
+                  exit 1
+                }
+                
+                deploy_and_wait \
+                "$backend_staging_deploy" \
+                "$backend_staging_service_id" \
+                "bugtracker-backend-staging-kamui"
+
+                deploy_and_wait \
+                "$frontend_staging_deploy" \
+                "$frontend_staging_serviceid" \
+                "bugtracker-frontend-staging-kamui"
+
+    smoke-tests:
+        if: ${{ github.ref_name == 'main' || github.ref_name == 'staging' }}
+        environment:  ${{ github.ref_name == 'main' || 'staging' }}
+        needs: [deploy]
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v5
 
-            - name: Launch App
-              run: |
-                export DATABASE_URL="$TEST_DATABASE_URL"
-                if [ -z "$DATABASE_URL" ]; then
-                  echo "DATABASE_URL is empty"
-                  exit 1
-                fi
-                docker compose up --build -d
-                docker compose logs
-                npx wait-port http://localhost:8080/api/health -t 30000
-            
-            - name: Debug - Show container logs on failure
-              if: failure()
-              run: docker compose logs
-
             - name: Run API Tests
               working-directory: ./tests-api
               run: npm ci && npx playwright test
-
-            - name: Run E2E Tests
-              working-directory: ./tests-e2e
-              run: |
-                npm ci
-                npx playwright install
-                npx playwright test
-
-            - name: Tear down App
-              run: docker compose down
 
             - name: Upload API Test Results
               if: always()
@@ -180,46 +222,63 @@ jobs:
                 path: ./tests-api/playwright-report/
                 retention-days: 30
 
-            - name: Upload E2E Test Results
-              if: always()
-              uses: actions/upload-artifact@v6
-              with:
-                name: e2e-test-results
-                path: ./tests-e2e/test-results/
-                retention-days: 30
+    regression-tests:
+        needs: [smoke-tests]
+        if: github.ref_name == 'main' || github.ref_name == 'staging'
+        environment: ${{ github.ref_name == 'main' || 'staging' }}
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v5
 
-            - name: Upload E2E Test Playwright Report
-              if: always()
-              uses: actions/upload-artifact@v6
-              with:
-                name: e2e-test-playwright-report
-                path: ./tests-e2e/playwright-report/
-                retention-days: 30
+          - name: Run E2E Tests
+            env:
+              APP_URL: ${{ secrets.APP_BASE_URL }}
+            working-directory: ./tests-e2e
+            run: |
+              npm ci
+              npx playwright install
+              npx playwright test
 
-            - name: Publish API Test Results
-              uses: dorny/test-reporter@v1
-              if: always()
-              with:
-                name: Playwright API Test Results
-                path: ./tests-api/test-results/*.xml
-                reporter: jest-junit
-            
-            - name: Publish E2E Test Results
-              uses: dorny/test-reporter@v1
-              if: always()
-              with:
-                name: Playwright E2E Test Results
-                path: ./tests-e2e/test-results/*.xml
-                reporter: jest-junit
+          - name: Upload E2E Test Results
+            if: always()
+            uses: actions/upload-artifact@v6
+            with:
+              name: e2e-test-results
+              path: ./tests-e2e/test-results/
+              retention-days: 30
+
+          - name: Upload E2E Test Playwright Report
+            if: always()
+            uses: actions/upload-artifact@v6
+            with:
+              name: e2e-test-playwright-report
+              path: ./tests-e2e/playwright-report/
+              retention-days: 30
+
+          - name: Publish API Test Results
+            uses: dorny/test-reporter@v1
+            if: always()
+            with:
+              name: Playwright API Test Results
+              path: ./tests-api/test-results/*.xml
+              reporter: jest-junit
+          
+          - name: Publish E2E Test Results
+            uses: dorny/test-reporter@v1
+            if: always()
+            with:
+              name: Playwright E2E Test Results
+              path: ./tests-e2e/test-results/*.xml
+              reporter: jest-junit
 
     performance-tests:
-        needs: [unit-tests-backend, unit-tests-frontend]
+        if: ${{ github.ref_name == 'staging' }}
+        needs: [regression-tests]
         permissions:
           pages: write
           id-token: write
           contents: read
         runs-on: ubuntu-latest
-
         steps:
             - uses: actions/checkout@v5
 
@@ -231,6 +290,7 @@ jobs:
                   exit 1
                 fi
                 docker compose up --build -d
+                docker compose logs
                 npx wait-port http://localhost:8080/api/health -t 30000
 
             - name: Set up k6
@@ -241,7 +301,10 @@ jobs:
               with:
                 path: ./tests-perf/script.js
                 flags: --out json=summary.json
-            
+    
+            - name: Tear down App
+              run: docker compose down
+
             - name: Prepare Pages site
               if: always()
               run: |
@@ -267,10 +330,12 @@ jobs:
               uses: actions/upload-pages-artifact@v3
               with:
                 path: ./site
-    
+
     deploy-performance-report:
-        if: always()
-        needs: performance-tests
+        needs: [performance-tests]
+        if: |
+          always() &&
+          github.ref_name == 'staging'
         permissions:
           pages: write
           id-token: write
