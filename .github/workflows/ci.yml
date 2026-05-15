@@ -225,7 +225,7 @@ jobs:
     regression-tests:
         needs: [smoke-tests]
         if: github.ref_name == 'main' || github.ref_name == 'staging'
-        environment: ${{ github.ref_name == 'main' || 'staging' }}
+        environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
         runs-on: ubuntu-latest
         steps:
           - uses: actions/checkout@v5
