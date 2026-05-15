@@ -135,7 +135,7 @@ jobs:
     deploy:
         if: ${{ github.ref_name == 'main' || github.ref_name == 'staging' }}
         needs: [unit-tests-backend, unit-tests-frontend]
-        environment:  ${{ github.ref_name == 'main' || 'staging' }}
+        environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
         runs-on: ubuntu-latest
         steps:
             - name: Deploy
@@ -196,7 +196,7 @@ jobs:
 
     smoke-tests:
         if: ${{ github.ref_name == 'main' || github.ref_name == 'staging' }}
-        environment:  ${{ github.ref_name == 'main' || 'staging' }}
+        environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
         needs: [deploy]
         runs-on: ubuntu-latest
         steps:
