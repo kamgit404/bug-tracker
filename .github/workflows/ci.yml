@@ -19,7 +19,8 @@ env:
 jobs:
     unit-tests-backend:
         runs-on: ubuntu-latest
-        environment: ${{ (github.base_ref || github.ref_name) == 'main' && 'production' || 'staging' }}
+        env:
+          APP_ENV: staging
         defaults:
           run:
             working-directory: bugtracker-backend
