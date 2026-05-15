@@ -251,7 +251,7 @@ pipeline {
                 }
             }
             environment {
-                STAGING_APP_BASE_URL = credentials('STAGING_APP_URL')
+                APP_URL = credentials('STAGING_APP_URL')
             }
             steps {
                 dir('tests-e2e') {
