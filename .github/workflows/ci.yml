@@ -187,13 +187,13 @@ jobs:
                 }
                 
                 deploy_and_wait \
-                "$backend_staging_deploy" \
-                "$backend_staging_service_id" \
+                "$BE_DEPLOY_HOOK" \
+                "$BE_SERVICEID" \
                 "bugtracker-backend-staging-kamui"
 
                 deploy_and_wait \
-                "$frontend_staging_deploy" \
-                "$frontend_staging_serviceid" \
+                "$FE_DEPLOY_HOOK" \
+                "$FE_SERVICEID" \
                 "bugtracker-frontend-staging-kamui"
 
     smoke-tests:
