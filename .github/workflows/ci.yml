@@ -148,6 +148,7 @@ jobs:
                 
                 deploy_and_wait() {
                   echo "🚀 Deploying to staging environment..."
+                  echo ":checkered_flag: $DEPLOY_HOOK_URL and staging env: $BE_DEPLOY_HOOK"
                   DEPLOY_ID=$(curl "$DEPLOY_HOOK_URL" | jq -r '.deploy.id')
 
                   if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" = "null" ]; then
