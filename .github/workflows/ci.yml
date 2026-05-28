@@ -135,9 +135,15 @@ jobs:
               ${{ needs.unit-tests-frontend.outputs.coverage }}
 
     deploy:
-        if: ${{ github.ref_name == 'main' || github.ref_name == 'staging' }}
+        if: github.event_name == 'push' &&
+            (github.ref_name == 'main' || github.ref_name == 'staging')
         needs: [unit-tests-backend, unit-tests-frontend]
         environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+        env:
+          BE_DEPLOY_HOOK: ${{ secrets.BE_DEPLOY_HOOK }}
+          FE_DEPLOY_HOOK: ${{ secrets.FE_DEPLOY_HOOK }}
+          BE_SERVICEID: ${{ secrets.BE_SERVICEID }}
+          FE_SERVICEID: ${{ secrets.FE_SERVICEID }}
         runs-on: ubuntu-latest
         steps:
             - name: Deploy
@@ -200,6 +206,10 @@ jobs:
     smoke-tests:
         if: ${{ github.ref_name == 'main' || github.ref_name == 'staging' }}
         environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+        env:
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          APP_ENV: ${{ secrets.APP_ENV }}
         needs: [deploy]
         runs-on: ubuntu-latest
         steps:
@@ -229,6 +239,10 @@ jobs:
         needs: [smoke-tests]
         if: github.ref_name == 'main' || github.ref_name == 'staging'
         environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+        env:
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          APP_ENV: ${{ secrets.APP_ENV }}
         runs-on: ubuntu-latest
         steps:
           - uses: actions/checkout@v5
