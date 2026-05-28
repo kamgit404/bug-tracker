@@ -17,6 +17,51 @@ env:
   RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
 
 jobs:
+    app-changes:
+      runs-on: ubuntu-latest
+      outputs:
+        deploy_required: ${{ steps.app-changes.outputs.any_changed }}
+
+      steps:
+        - uses: actions/checkout@v5
+        - name: Check changed files in app code
+          id: app-changes
+          uses: tj-actions/changed-files@v45
+          with:
+            files: |
+              bugtracker-backend/**
+              bugtracker-frontend/**  
+
+    test-automation-changes:
+      runs-on: ubuntu-latest
+      outputs:
+        changed_files: ${{ steps.test-automation-changes.outputs.changed_files }}
+
+      steps:
+        - uses: actions/checkout@v5
+
+        - name: Check changed files in test automation code
+          id: test-automation-changes
+          uses: tj-actions/changed-files@v45
+          with:
+            files: |
+              tests-api/**
+              tests-e2e/**
+        
+        - name: Build list of changed test automation files
+          id: changed-tests-list
+          run: |
+            FILES="${{ steps.test-automation-changes.outputs.all_changed_files }}"
+            TEST_FILES=""
+
+            for file in $FILES; do
+              if [[ $file == tests-api/* || $file == tests-e2e/* ]]; then
+                TEST_FILES="$TEST_FILES $file"
+              fi
+            done
+
+            echo "test_files=$TEST_FILES" >> $GITHUB_OUTPUT
+
     unit-tests-backend:
         runs-on: ubuntu-latest
         env:
@@ -135,9 +180,9 @@ jobs:
               ${{ needs.unit-tests-frontend.outputs.coverage }}
 
     deploy:
-        if: github.event_name == 'push' &&
+        if: needs.app-changes.outputs.deploy_required == 'true' && github.event_name == 'push' &&
             (github.ref_name == 'main' || github.ref_name == 'staging')
-        needs: [unit-tests-backend, unit-tests-frontend]
+        needs: [app-changes, unit-tests-backend, unit-tests-frontend]
         environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
         env:
           BE_DEPLOY_HOOK: ${{ secrets.BE_DEPLOY_HOOK }}
@@ -203,14 +248,37 @@ jobs:
                 "$FE_SERVICEID" \
                 "bugtracker-frontend-staging-kamui"
 
-    smoke-tests:
-        if: ${{ github.ref_name == 'main' || github.ref_name == 'staging' }}
+    impacted-tests:
+        needs: [test-automation-changes]
+        if: github.event_name == 'pull_request' && github.base_ref == 'staging'
         environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
         env:
           APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
-          APP_ENV: ${{ secrets.APP_ENV }}
+          APP_ENV: ${{ vars.APP_ENV }}
+        runs-on: ubuntu-latest
+        steps:
+          - name: Run impacted tests only
+            run: |
+              if [ -z "${{ needs.test-automation-changes.outputs.changed_files }}" ]; then
+                echo "No test changes detected to execute."
+              else
+                echo "Running impacted tests:"
+                echo "${{ needs.test-automation-changes.outputs.changed_files }}"
+                npm ci && npx playwright install
+                npx playwright test ${{ needs.test-automation-changes.outputs.changed_files }}
+              fi
+
+    smoke-tests:
         needs: [deploy]
+        if: |
+          always() &&
+          (needs.deploy.result == 'success' || needs.deploy.result == 'skipped')
+        environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+        env:
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          APP_ENV: ${{ vars.APP_ENV }}
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v5
@@ -242,7 +310,7 @@ jobs:
         env:
           APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
-          APP_ENV: ${{ secrets.APP_ENV }}
+          APP_ENV: ${{ vars.APP_ENV }}
         runs-on: ubuntu-latest
         steps:
           - uses: actions/checkout@v5
