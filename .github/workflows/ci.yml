@@ -148,13 +148,13 @@ jobs:
         steps:
             - name: Deploy
               run: |
-                DEPLOY_HOOK_URL=$1
-                SERVICE_ID=$2
-                SERVICE_NAME=$3
                 
                 deploy_and_wait() {
+                  DEPLOY_HOOK_URL=$1
+                  SERVICE_ID=$2
+                  SERVICE_NAME=$3
+
                   echo "🚀 Deploying to staging environment..."
-                  echo ":checkered_flag: $DEPLOY_HOOK_URL and staging env: $BE_DEPLOY_HOOK"
                   DEPLOY_ID=$(curl "$DEPLOY_HOOK_URL" | jq -r '.deploy.id')
 
                   if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" = "null" ]; then
