@@ -55,11 +55,13 @@ export default defineConfig([
     plugins: {
       playwright,
     },
-    extends: ['playwright/recommended'],
     rules: {
       // Commonly useful adjustments for test code
+      ...playwright.configs.recommended.rules,
       'playwright/no-skipped-test': 'warn',
       'playwright/no-focused-test': 'error',
+      '@typescript-eslint/no-unsafe-assignment': 'warn',
+      '@typescript-eslint/no-unsafe-member-access': 'warn',
     },
   },
 

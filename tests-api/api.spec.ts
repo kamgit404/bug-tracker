@@ -2,8 +2,9 @@ import { test, expect } from '@playwright/test';
 
 let testBugId: number;
 
-test('Call Health Check', async ({ request }) => {
+test('Call Health Check', async ({ request }, testInfo) => {
   console.log('Starting test...');
+  console.log('API Base URL:', testInfo.project.use.baseURL);
 
   const healthCheckResponse = await request.get('health');
   expect(healthCheckResponse.ok()).toBeTruthy();
