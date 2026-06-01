@@ -251,11 +251,10 @@ jobs:
     impacted-tests:
         needs: [test-automation-changes]
         if: github.event_name == 'pull_request' && github.base_ref == 'staging'
-        environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
         env:
-          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
-          API_BASE_URL: ${{ secrets.API_BASE_URL }}
-          APP_ENV: ${{ vars.APP_ENV }}
+          APP_BASE_URL: ${{ vars.STAGING_APP_BASE_URL }}
+          API_BASE_URL: ${{ vars.STAGING_API_BASE_URL }}
+          APP_ENV: ${{ vars.STAGING_APP_ENV }}
         runs-on: ubuntu-latest
         steps:
           - name: Run impacted tests only
@@ -274,11 +273,10 @@ jobs:
         if: |
           always() &&
           (needs.deploy.result == 'success' || needs.deploy.result == 'skipped')
-        environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
         env:
-          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
-          API_BASE_URL: ${{ secrets.API_BASE_URL }}
-          APP_ENV: ${{ vars.APP_ENV }}
+          APP_BASE_URL: ${{ github.ref_name == 'main' && vars.PROD_APP_BASE_URL || vars.STAGING_APP_BASE_URL }}
+          API_BASE_URL: ${{ github.ref_name == 'main' && vars.PROD_API_BASE_URL || vars.STAGING_API_BASE_URL }}
+          APP_ENV: ${{ github.ref_name == 'main' && vars.PROD_APP_ENV || vars.STAGING_APP_ENV }}
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v5
@@ -305,19 +303,18 @@ jobs:
 
     regression-tests:
         needs: [smoke-tests]
-        if: github.ref_name == 'main' || github.ref_name == 'staging'
-        environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+        if: github.ref_name == 'staging'
         env:
-          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
-          API_BASE_URL: ${{ secrets.API_BASE_URL }}
-          APP_ENV: ${{ vars.APP_ENV }}
+          APP_BASE_URL: ${{ vars.STAGING_APP_BASE_URL }}
+          API_BASE_URL: ${{ vars.STAGING_API_BASE_URL }}
+          APP_ENV: ${{ vars.STAGING_APP_ENV }}
         runs-on: ubuntu-latest
         steps:
           - uses: actions/checkout@v5
 
           - name: Run E2E Tests
             env:
-              APP_URL: ${{ secrets.APP_BASE_URL }}
+              APP_URL: ${{ vars.STAGING_APP_BASE_URL }}
             working-directory: ./tests-e2e
             run: |
               npm ci
