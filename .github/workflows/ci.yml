@@ -303,7 +303,7 @@ jobs:
 
     regression-tests:
         needs: [smoke-tests]
-        if: github.ref_name == 'staging'
+        if: needs.smoke-tests.result == 'success' && github.base_ref == 'staging'
         env:
           APP_BASE_URL: ${{ vars.STAGING_APP_BASE_URL }}
           API_BASE_URL: ${{ vars.STAGING_API_BASE_URL }}
@@ -354,7 +354,7 @@ jobs:
               reporter: jest-junit
 
     performance-tests:
-        if: ${{ github.ref_name == 'staging' }}
+        if: github.base_ref == 'staging'
         needs: [regression-tests]
         permissions:
           pages: write
@@ -416,8 +416,8 @@ jobs:
     deploy-performance-report:
         needs: [performance-tests]
         if: |
-          always() &&
-          github.ref_name == 'staging'
+          always() && github.base_ref == 'staging' && 
+          (needs.performance-tests.result == 'success' || needs.performance-tests.result == 'failed')
         permissions:
           pages: write
           id-token: write
